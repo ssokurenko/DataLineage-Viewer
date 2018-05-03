@@ -57,3 +57,7 @@ typings/
 # dotenv environment variables file
 .env
 
+# VS temp files
+.vs/
+_ReSharper.Caches/
+
