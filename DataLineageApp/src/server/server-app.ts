@@ -1,5 +1,4 @@
-﻿'use strict';
-var debug = require('debug');
+﻿var debug = require('debug');
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -30,7 +29,7 @@ app.use('/users', users);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
     var err = new Error('Not Found');
-    err.status = 404;
+    (err as any).status = 404;
     next(err);
 });
 

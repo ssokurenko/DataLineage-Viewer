@@ -61,3 +61,10 @@ typings/
 .vs/
 _ReSharper.Caches/
 
+# VS user config files
+*.user
+
+DataLineageApp/dist/
+DataLineageApp/bin/
+DataLineageApp/obj/
+

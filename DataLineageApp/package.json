@@ -3,11 +3,17 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node app"
+    "start": "node ./dist/server-app",
+    "build": "cd ./src/server && tsc && cd ../client && tsc"
   },
   "description": "DataLineageApp",
   "author": {
-    "name": "CHENBO"
+    "name": "DNVGL"
+  },
+  "devDependencies": {
+    "@types/node": "8.10.12",
+    "ts-node": "^6.0.2",
+    "typescript": "^2.8.3"
   },
   "dependencies": {
     "body-parser": "^1.15.0",
@@ -18,4 +24,5 @@
     "pug": "^2.0.0-beta6",
     "serve-favicon": "^2.3.0"
   }
+, "-vs-binding":{"BeforeBuild":["build"]}
 }

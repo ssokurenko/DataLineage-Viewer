@@ -1,0 +1,29 @@
+﻿{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es5",
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "noEmitOnError": true,
+    "removeComments": false,
+    "allowJs": true,
+    "lib": [
+      "dom",
+      "es5",
+      "es2015.promise"
+    ],
+    "paths": {
+      "*": [
+        "node_modules/*"
+      ]
+    },
+    "baseUrl": ".",
+    "jsx": "react"
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
