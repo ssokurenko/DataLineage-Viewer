@@ -65,6 +65,6 @@ _ReSharper.Caches/
 *.user
 
 DataLineageApp/dist/
-DataLineageApp/bin/
-DataLineageApp/obj/
+**/bin/
+**/obj/
 
