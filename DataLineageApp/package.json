@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./dist/server-app",
-    "build": "cd ./src/server && tsc && cd ../client && tsc"
+    "build": "cd ./src/server && tsc"
   },
   "description": "DataLineageApp",
   "author": {
@@ -12,8 +12,10 @@
   },
   "devDependencies": {
     "@types/node": "8.10.12",
+    "copy-webpack-plugin": "^4.5.1",
     "ts-node": "^6.0.2",
-    "typescript": "^2.8.3"
+    "typescript": "^2.8.3",
+    "webpack": "^4.6.0"
   },
   "dependencies": {
     "body-parser": "^1.15.0",
@@ -23,6 +25,10 @@
     "morgan": "^1.7.0",
     "pug": "^2.0.0-beta6",
     "serve-favicon": "^2.3.0"
+  },
+  "-vs-binding": {
+    "BeforeBuild": [
+      "build"
+    ]
   }
-, "-vs-binding":{"BeforeBuild":["build"]}
 }

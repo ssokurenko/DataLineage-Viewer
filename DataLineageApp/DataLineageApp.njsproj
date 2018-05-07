@@ -6,6 +6,11 @@
     <Name>DataLineageApp</Name>
     <RootNamespace>DataLineageApp</RootNamespace>
     <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
+    <EnableTypeScript>true</EnableTypeScript>
+    <TypeScriptSourceMap>true</TypeScriptSourceMap>
+    <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
+    <ToolsVersionPromptShown>0.0</ToolsVersionPromptShown>
+    <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -51,12 +56,15 @@
     <Folder Include="src\" />
     <Folder Include="src\client\" />
     <Folder Include="src\server\" />
+    <Folder Include="src\server\public\" />
+    <Folder Include="src\server\public\javascripts\" />
     <Folder Include="src\server\routes\" />
     <Folder Include="src\server\views\" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="src\client\client-app.ts" />
     <TypeScriptCompile Include="src\server\server-app.ts" />
+    <TypeScriptCompile Include="webpack.config.ts" />
   </ItemGroup>
   <!-- Do not delete the following Import Project.  While this appears to do nothing it is a marker for setting TypeScript properties before our import that depends on them. -->
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="False" />
