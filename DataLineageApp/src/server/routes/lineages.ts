@@ -28,7 +28,7 @@ function waitAny<T>(promises: Promise<T>[]): Promise<T> {
         p
             .then(value => {
                 finishedPromisesCount++;
-                if (!resolved) {
+                if (!resolved && value) {
                     promiseOp.resolve(value);
                     resolved = true;
                 }
