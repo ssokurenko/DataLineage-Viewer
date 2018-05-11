@@ -82,8 +82,25 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
 }
 
 /* GET home page. */
-router.get("/:address", async (req, res) => {
-    res.json(await fetchPacakgeInfoWithCache(req.params["address"]));
+router.get("/:address/:all?", async (req, res) => {
+    const allPacakges: IDataPackage[] = [];
+    const fetchAddresses: string[] = [];
+    let address = req.params["address"];
+    if (address) {
+        fetchAddresses.push(address);
+    }
+    while (fetchAddresses.length > 0) {
+        address = fetchAddresses.shift();
+        const pkg = await fetchPacakgeInfoWithCache(address);
+        if (pkg) {
+            allPacakges.push(pkg);
+            if (req.params.all && pkg.inputs && pkg.inputs.length > 0) {
+                pkg.inputs.forEach(a => fetchAddresses.push(a));
+            }
+        }
+    }
+    
+    res.json(allPacakges);
 });
 
 export default router;
