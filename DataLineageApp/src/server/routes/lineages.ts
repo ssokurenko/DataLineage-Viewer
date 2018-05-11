@@ -1,9 +1,14 @@
 ﻿import * as express from "express";
+import NodeCache =  require("node-cache");
 import IOTA = require("iota.lib.js");
 import * as Mam from "../mam.node.js";
 import config from "../server-config";
+import {IDataPackage} from "../data-package";
 
 const router = express.Router();
+const packageCache = new NodeCache({
+    stdTTL: 3600 * 24 * 3
+});
 
 /**
  * wait until one promese resolved or all promise rejected
@@ -34,6 +39,7 @@ function waitAny<T>(promises: Promise<T>[]): Promise<T> {
                 }
             })
             .catch(reason => {
+                //ToDo: Log the reason
                 finishedPromisesCount++;
                 if (!resolved && finishedPromisesCount >= promises.length) {
                     promiseOp.reject(reason);
@@ -43,12 +49,13 @@ function waitAny<T>(promises: Promise<T>[]): Promise<T> {
     return result;
 }
 
-/* GET home page. */
-router.get("/:address", async (req, res) => {
-    const address = req.param("address");
+async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage | null> {
     if (!address) {
-        res.json({});
-        return;
+        return null;
+    }
+    const cached = packageCache.get<IDataPackage>(address);
+    if (cached) {
+        return cached;
     }
     const allApiCalls = config.iotaProviders.map(async (p) => {
         const iota = new IOTA({ provider: p });
@@ -59,13 +66,24 @@ router.get("/:address", async (req, res) => {
     });
 
     try {
-        const firstFound = await waitAny(allApiCalls);
-        res.json(JSON.parse(firstFound));
+        const firstFoundJson = await waitAny(allApiCalls);
+        if (firstFoundJson) {
+            const found = JSON.parse(firstFoundJson);
+            packageCache.set(address, found);
+            return found;
+        }
+        return null;
     } catch (e) {
+        //ToDo: Log
         //if all not foudn, then will reject, so get the exception
         //we return an empty object to indicate it no result
-        res.json({});
+        return null;
     }
+}
+
+/* GET home page. */
+router.get("/:address", async (req, res) => {
+    res.json(await fetchPacakgeInfoWithCache(req.params("address")));
 });
 
 export default router;
