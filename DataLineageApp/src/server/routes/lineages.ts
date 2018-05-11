@@ -81,7 +81,11 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
     }
 }
 
-/* GET home page. */
+/* GET package information by address api
+ supported urls:
+ api/lineages/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY         -> only get this pacakge inforamtion
+ api/lineages/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY/all     -> get pcakge and all it's inputs recursively
+ */
 router.get("/:address/:all?", async (req, res) => {
     const allPacakges: IDataPackage[] = [];
     const fetchAddresses: string[] = [];
