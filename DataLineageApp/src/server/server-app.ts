@@ -4,7 +4,16 @@ import path = require("path");
 import logger = require("morgan");
 import cookieParser = require("cookie-parser");
 import bodyParser = require("body-parser");
+import globalTunnel = require("global-tunnel");
 import lineages from "./routes/lineages";
+import config from "./server-config";
+
+if (config.proxy) {
+    globalTunnel.initialize({
+        host: config.proxy.host,
+        port: config.proxy.port
+    });
+}
 
 var routes = require("./routes/index");
 

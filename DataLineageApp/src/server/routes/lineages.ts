@@ -7,7 +7,7 @@ import {IDataPackage} from "../data-package";
 
 const router = express.Router();
 const packageCache = new NodeCache({
-    stdTTL: 3600 * 24 * 3
+    stdTTL: config.pacakgeCacheSeconds
 });
 
 /**
@@ -83,7 +83,7 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
 
 /* GET home page. */
 router.get("/:address", async (req, res) => {
-    res.json(await fetchPacakgeInfoWithCache(req.params("address")));
+    res.json(await fetchPacakgeInfoWithCache(req.params["address"]));
 });
 
 export default router;

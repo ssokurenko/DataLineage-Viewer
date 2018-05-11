@@ -29,6 +29,7 @@
     "cookie-parser": "^1.4.0",
     "debug": "^2.2.0",
     "express": "^4.14.0",
+    "global-tunnel": "^1.2.0",
     "iota.lib.js": "^0.4.7",
     "morgan": "^1.7.0",
     "node-cache": "^4.2.0",
