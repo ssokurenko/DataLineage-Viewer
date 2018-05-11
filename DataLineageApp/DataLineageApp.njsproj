@@ -36,7 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="src\server\mam.node.js" />
-    <Compile Include="src\server\routes\index.js" />
+    <Compile Include="src\server\routes\index.ts" />
     <Content Include="package.json" />
     <Content Include="README.md" />
     <Content Include="src\client\tsconfig.json">
