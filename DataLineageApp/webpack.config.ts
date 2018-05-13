@@ -66,7 +66,8 @@ const config: webpack.Configuration = {
     ],
     externals: {
         jquery: "jQuery",
-        bootstrap: "bootstrap"/*,
+        bootstrap: "bootstrap",
+        d3: "d3"/*,
         toastr: "toastr"*/
     },
     devtool: "source-map"
