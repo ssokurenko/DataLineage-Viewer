@@ -64,7 +64,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="src\client\client-app.ts" />
     <TypeScriptCompile Include="src\server\data-package.ts" />
-    <TypeScriptCompile Include="src\server\routes\lineages.ts" />
+    <TypeScriptCompile Include="src\server\routes\address.ts" />
     <TypeScriptCompile Include="src\server\server-app.ts" />
     <TypeScriptCompile Include="src\server\server-config.ts">
       <SubType>Code</SubType>

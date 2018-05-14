@@ -68,7 +68,7 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
     try {
         const firstFoundJson = await waitAny(allApiCalls);
         if (firstFoundJson) {
-            const found = JSON.parse(firstFoundJson);
+            const found: IDataPackage = { ...JSON.parse(firstFoundJson), iotaAddress: address } as IDataPackage;
             packageCache.set(address, found);
             return found;
         }
@@ -83,8 +83,8 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
 
 /* GET package information by address api
  supported urls:
- api/lineages/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY         -> only get this pacakge inforamtion
- api/lineages/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY/all     -> get pcakge and all it's inputs recursively
+ api/address/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY         -> only get this pacakge inforamtion
+ api/address/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY/all     -> get pcakge and all it's inputs recursively
  */
 router.get("/:address/:all?", async (req, res) => {
     const allPacakges: IDataPackage[] = [];

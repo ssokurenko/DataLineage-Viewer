@@ -6,7 +6,7 @@ import cookieParser = require("cookie-parser");
 import bodyParser = require("body-parser");
 import globalTunnel = require("global-tunnel");
 import index from "./routes/index";
-import lineages from "./routes/lineages";
+import address from "./routes/address";
 import config from "./server-config";
 
 if (config.proxy) {
@@ -31,7 +31,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", index);
-app.use("/api/lineages", lineages);
+app.use("/api/address", address);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
