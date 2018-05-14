@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node ./dist/server-app",
-    "build": "cd ./src/server && tsc && cd .. && cd .. && webpack"
+    "build": "cd ./src/server && tsc && cd .. && cd .. && webpack",
+    "clean:js": "del-cli dist/**"
   },
   "description": "DataLineageApp",
   "author": {
@@ -13,6 +14,7 @@
   "devDependencies": {
     "@types/node": "8.10.12",
     "copy-webpack-plugin": "^4.5.1",
+    "del-cli": "^1.1.0",
     "ts-loader": "^4.3.0",
     "ts-node": "^6.0.3",
     "typescript": "^2.8.3",
