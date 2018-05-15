@@ -19,23 +19,45 @@ function notify(type: NotifyType, message: string) {
     alert(message);
 }
 
-class App {
-    private readonly _svg: d3.Selection<HTMLElement, any, any, any>;
-    private readonly _force: d3.Simulation<INodeData, ILinkData> | undefined;
-    private readonly _nodesData: INodeData[];
-    private readonly _linksData: d3.Link<App, ILinkData, INodeData>[];
+/*
+ * Define all force names we will be used to draw the graph
+ */
+class ForceNames {
+    static readonly Collision = "Collision";
+    static readonly Charge = "Charge";
+    static readonly Gravity = "Gravity";
+    static readonly Link = "Link";
+}
 
+class App {
+    private static readonly NodeRadius = 8;
+    private static readonly NodeCssClass = "node";
+    private static readonly LinkCssClass = "link";
+
+    private readonly _svg: d3.Selection<HTMLElement, any, any, any>;
+    private readonly _simulation: d3.Simulation<INodeData, ILinkData>;
+    private readonly _nodesData: INodeData[];
+    private readonly _linksData: ILinkData[];
+    
     constructor(private readonly _rootPkgAddress: string, svgSelector: string) {
         this._svg = d3.select(svgSelector);
-        this._force = d3.forceSimulation<INodeData>()
-            .force("charge", d3.forceManyBody())
+        //clear
+        this._svg.selectAll("*").remove();
+        //initialize forces
+        this._simulation = d3.forceSimulation<INodeData>()
+            .force(ForceNames.Collision, d3.forceCollide(App.NodeRadius * 2))
+            //make nodes repel each other
+            .force(ForceNames.Charge, d3.forceManyBody().strength(-20))
+            //make nodes have gravity, so they will be apt to go down
+            .force(ForceNames.Gravity, d3.forceY(this.height * 10).strength(0.001))
+            .force(ForceNames.Link, d3.forceLink<INodeData, ILinkData>().id(d => d.package.iotaAddress).distance(App.NodeRadius * 3))
             .on("tick", this.onSimulationTicked.bind(this));
         this._nodesData = [];
         this._linksData = [];
     }
 
-    private fetchPackage(address: string, all: boolean = false): Promise<IDataPackage> {
-        return $.get(`/api/address/${address}${(all ? "/all" : "")}`);
+    private async fetchPackage(address: string, all: boolean = false): Promise<IDataPackage[]> {
+        return await $.get(`/api/address/${address}${(all ? "/all" : "")}`);
     }
 
     get width(): number {
@@ -46,6 +68,14 @@ class App {
     get height(): number {
         const nsvg = this._svg.node();
         return nsvg ? nsvg.getBoundingClientRect().height : 0;
+    }
+
+    get nodesSelection(): d3.Selection<HTMLElement, INodeData, HTMLElement, INodeData> {
+        return this._svg.selectAll(`.${App.NodeCssClass}`);
+    }
+
+    get linkssSelection(): d3.Selection<HTMLElement, ILinkData, HTMLElement, ILinkData> {
+        return this._svg.selectAll(`.${App.LinkCssClass}`);
     }
 
     /**
@@ -75,20 +105,102 @@ class App {
     }
 
     private onSimulationTicked(): void {
-        this._svg.selectAll(".node")
-            .attr("cx", (d: INodeData) => (d.fx ? d.fx : d.x) as number)
-            .attr("cy", (d: INodeData) => (d.fy ? d.fy : d.y) as number);
+
+        /**
+         * return the value directly when d is undefined, number or string
+         * return undefined if d is INodeData
+         * @param d
+         */
+        const v = (d: INodeData | undefined | string | number): number | undefined => {
+            if (!d) return 0;
+            if (typeof (d) === "number") {
+                return d;
+            }
+            if (typeof (d) === "string") {
+                return parseFloat(d);
+            }
+            return undefined;
+        }
+        /**
+         * return fx if fx has value, otherwise return x
+         * @param d
+         */
+        const x = (d: INodeData | undefined | string | number): number => {
+            const temp = v(d);
+            if (typeof temp !== "undefined") {
+                return temp;
+            }
+            const nd = d as INodeData;
+            return (nd.fx ? nd.fx : nd.x) as number;
+        };
+
+        /**
+         * return fy if fy has value, otherwise return y
+         * @param d
+         */
+        const y = (d: INodeData | undefined | string | number): number => {
+            const temp = v(d);
+            if (typeof temp !== "undefined") {
+                return temp;
+            }
+            const nd = d as INodeData;
+            return (nd.fy ? nd.fy : nd.y) as number;
+        };
+
+        this.nodesSelection
+            .attr("cx",
+                (d: INodeData) => {
+                    return x(d);
+                })
+            .attr("cy",
+                (d: INodeData) => {
+                    return y(d);
+                });
+
+        this.linkssSelection
+            .attr("x1",
+                (d: ILinkData) => {
+                    return x(d.source);
+                })
+            .attr("y1",
+                (d: ILinkData) => {
+                    return y(d.source);
+                })
+            .attr("x2",
+                (d: ILinkData) => {
+                    return x(d.target);
+                })
+            .attr("y2",
+                (d: ILinkData) => {
+                    return y(d.target);
+                });
+    }
+
+    /**
+     * 
+     * @param data
+     * @param index, accroding to d3js, index is fixed when listern registered, so don't use it
+     * @param nodes
+     */
+    private onNodeClicked(data: INodeData, index, nodes): void {
+        if (data.package && data.package.inputs) {
+            data.package.inputs.forEach(address => this.update(address));
+        }
     }
 
     /*
      * update d3js nodes elements based on the latest _nodesData
      */
     private updateD3Nodes(): void {
-        const nodesSelection = this._svg.selectAll(".node").data(this._nodesData);
+        this._simulation.nodes(this._nodesData);
+        const nodesSelection = this.nodesSelection.data(this._nodesData);
         //as we only add new packages onto the graph, no pacakges remove or update, so needn't take care about the remove and update
         //nodesSelection.exit().remove();
         //for new package node, we create cirele and set class as .node and other attributes
-        nodesSelection.enter().append("circle").attr("class", "node").attr("r", 5).attr("fill", 0);
+        nodesSelection.enter().append("circle")
+            .attr("class", `${App.NodeCssClass}`)
+            .attr("r", App.NodeRadius).attr("fill", 0)
+            .on("click", this.onNodeClicked.bind(this));
         //.merge(nodesSelection)
     }
 
@@ -96,7 +208,11 @@ class App {
      * update d3js links data and links elements based on the latest _nodesData
      */
     private updateD3Links(): void {
-
+        const f = this._simulation.force(ForceNames.Link) as d3.ForceLink<INodeData, ILinkData>;
+        f.links(this._linksData);
+        const linksSelection = this.linkssSelection.data(this._linksData);
+        linksSelection.enter().append("line")
+            .attr("class", `${App.LinkCssClass}`);
     }
 
     async update(address?: string): Promise<void> {
@@ -108,20 +224,25 @@ class App {
         //we only update when this is a root package or a pakcage is referenced as input, for the package has nothing to do with us, we ignore it
         if (address === this._rootPkgAddress || this.directInputsForNodes(address).length > 0) {
             const pkg = await this.fetchPackage(address);
-            if (!pkg) {
+            if (!pkg || pkg.length <= 0) {
                 notify(NotifyType.Warning, `Can't find the package with the address ${address}`);
                 return;
             }
             const nodeData: INodeData = {
-                package: pkg
+                package: pkg[0]
             };
             if (address === this._rootPkgAddress) {
                 nodeData.fx = this.width / 2;
                 nodeData.fy = 20;
             }
             this._nodesData.push(nodeData);
+            this.directInputsForNodes(address).map((n: INodeData) => ({
+                source: n.package.iotaAddress,
+                target: address as string
+            })).forEach(l => this._linksData.push(l));
             this.updateD3Nodes();
             this.updateD3Links();
+            this._simulation.restart();
         }
     }
 }
