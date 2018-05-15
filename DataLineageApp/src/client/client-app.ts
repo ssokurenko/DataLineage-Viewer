@@ -33,23 +33,46 @@ class App {
     private static readonly NodeRadius = 8;
     private static readonly NodeCssClass = "node";
     private static readonly LinkCssClass = "link";
+    private static readonly ArrowMarkerId = "arrow";
+    private static readonly ArrowXOffset = 6; //this must be same as the "6" in the path.d that defined in svg > defs > marker/#arrow
+    private static readonly ArrowColor = "#696969"; //must be same as the color of .line in main.css
 
     private readonly _svg: d3.Selection<HTMLElement, any, any, any>;
     private readonly _simulation: d3.Simulation<INodeData, ILinkData>;
     private readonly _nodesData: INodeData[];
     private readonly _linksData: ILinkData[];
+    private readonly _colorSeries = d3.schemePaired;
+    private readonly _color = d3.scaleOrdinal(this._colorSeries);
     
     constructor(private readonly _rootPkgAddress: string, svgSelector: string) {
         this._svg = d3.select(svgSelector);
         //clear
         this._svg.selectAll("*").remove();
+
+        /*
+         * Define arraw marker
+         */
+        const defs = this._svg.append("defs");
+        defs.append("marker")
+            .attr("id", App.ArrowMarkerId)
+            .attr("markerUnits", "strokeWidth")
+            .attr("markerWidth", "25")
+            .attr("markerHeight", "25")
+            .attr("viewBox", "0 0 12 12")
+            .attr("refX", App.ArrowXOffset + App.NodeRadius)
+            .attr("refY", "6")
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M2,2 L10,6 L2,10 L6,6 L2,2")
+            .attr("fill", App.ArrowColor);
+
         //initialize forces
         this._simulation = d3.forceSimulation<INodeData>()
             .force(ForceNames.Collision, d3.forceCollide(App.NodeRadius * 2))
             //make nodes repel each other
             .force(ForceNames.Charge, d3.forceManyBody().strength(-20))
             //make nodes have gravity, so they will be apt to go down
-            .force(ForceNames.Gravity, d3.forceY(this.height * 10).strength(0.001))
+            .force(ForceNames.Gravity, d3.forceY(this.height * 10).strength(0.005))
             .force(ForceNames.Link, d3.forceLink<INodeData, ILinkData>().id(d => d.package.iotaAddress).distance(App.NodeRadius * 3))
             .on("tick", this.onSimulationTicked.bind(this));
         this._nodesData = [];
@@ -184,7 +207,16 @@ class App {
      */
     private onNodeClicked(data: INodeData, index, nodes): void {
         if (data.package && data.package.inputs) {
-            data.package.inputs.forEach(address => this.update(address));
+            //to make it simple, we just set the iniial xy of the new input package right under the current node(data param)
+            //and the Collision and other forces will make they are seperated
+            const y = data.y ? (data.y + App.NodeRadius * 5) : undefined;
+            let x = data.x ? (data.x - data.package.inputs.length * App.NodeRadius * 2 / 2) : undefined;
+            data.package.inputs.forEach(address => {
+                this.update(address, x, y);
+                if (typeof x !== "undefined") {
+                    x += App.NodeRadius * 2;
+                }
+            });
         }
     }
 
@@ -199,7 +231,8 @@ class App {
         //for new package node, we create cirele and set class as .node and other attributes
         nodesSelection.enter().append("circle")
             .attr("class", `${App.NodeCssClass}`)
-            .attr("r", App.NodeRadius).attr("fill", 0)
+            .attr("r", App.NodeRadius)
+            .attr("fill", (d: INodeData) => this._color(((d.index ? d.index : 0) % this._colorSeries.length).toString()))
             .on("click", this.onNodeClicked.bind(this));
         //.merge(nodesSelection)
     }
@@ -212,10 +245,17 @@ class App {
         f.links(this._linksData);
         const linksSelection = this.linkssSelection.data(this._linksData);
         linksSelection.enter().append("line")
-            .attr("class", `${App.LinkCssClass}`);
+            .attr("class", `${App.LinkCssClass}`)
+            .attr("marker-end", "url(#arrow)");;
     }
 
-    async update(address?: string): Promise<void> {
+    /**
+     * 
+     * @param address
+     * @param initialX the prefered inital x of the new package node
+     * @param initialY the prefered inital y of the new package node
+     */
+    async update(address?: string, initialX?: number, initialY?: number): Promise<void> {
         if (!address) {
             address = this._rootPkgAddress;
         }
@@ -234,12 +274,20 @@ class App {
             if (address === this._rootPkgAddress) {
                 nodeData.fx = this.width / 2;
                 nodeData.fy = 20;
+            } else {
+                if (typeof initialX !== "undefined") {
+                    nodeData.x = initialX;
+                }
+                if (typeof initialY !== "undefined") {
+                    nodeData.y = initialY;
+                }
             }
             this._nodesData.push(nodeData);
             this.directInputsForNodes(address).map((n: INodeData) => ({
-                source: n.package.iotaAddress,
-                target: address as string
+                source: address as string,
+                target: n.package.iotaAddress
             })).forEach(l => this._linksData.push(l));
+            //must draw nodes first, then draw links, so that links and arrow can on top of nodes
             this.updateD3Nodes();
             this.updateD3Links();
             this._simulation.restart();

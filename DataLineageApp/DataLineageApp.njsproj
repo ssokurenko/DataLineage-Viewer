@@ -42,6 +42,7 @@
     <Content Include="src\client\tsconfig.json">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="src\server\public\stylesheets\main.css" />
     <Content Include="src\server\tsconfig.json">
       <SubType>Code</SubType>
     </Content>
@@ -58,6 +59,7 @@
     <Folder Include="src\server\" />
     <Folder Include="src\server\public\" />
     <Folder Include="src\server\public\javascripts\" />
+    <Folder Include="src\server\public\stylesheets\" />
     <Folder Include="src\server\routes\" />
     <Folder Include="src\server\views\" />
   </ItemGroup>
