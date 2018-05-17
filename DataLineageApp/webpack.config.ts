@@ -25,28 +25,11 @@ const config: webpack.Configuration = {
         new CopyWebpackPlugin([
             // {output}/directory/with/extension.ext/file.txt
             {
-                from: "src/server/public/*",
+                from: "./**",
                 to: path.resolve(__dirname, "./dist/public/"),
                 toType: "dir",
-                flatten: true
-            },
-            {
-                from: "src/server/public/javascripts/*",
-                to: path.resolve(__dirname, "./dist/public/javascripts"),
-                toType: "dir",
-                flatten: true
-            },
-            {
-                from: "src/server/public/stylesheets/*",
-                to: path.resolve(__dirname, "./dist/public/stylesheets"),
-                toType: "dir",
-                flatten: true
-            },
-            {
-                from: "src/server/public/imgs/*",
-                to: path.resolve(__dirname, "./dist/public/imgs"),
-                toType: "dir",
-                flatten: true
+                context: path.resolve(__dirname, "./src/server/public/"),
+                flatten: false
             },
             {
                 from: "src/server/views/*",
