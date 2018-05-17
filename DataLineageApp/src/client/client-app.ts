@@ -73,7 +73,7 @@ class App {
             .force(ForceNames.Charge, d3.forceManyBody().strength(-20))
             //make nodes have gravity, so they will be apt to go down
             .force(ForceNames.Gravity, d3.forceY(this.height * 10).strength(0.005))
-            .force(ForceNames.Link, d3.forceLink<INodeData, ILinkData>().id(d => d.package.iotaAddress).distance(App.NodeRadius * 3))
+            .force(ForceNames.Link, d3.forceLink<INodeData, ILinkData>().id(d => d.package.mamAddress).distance(App.NodeRadius * 3))
             .on("tick", this.onSimulationTicked.bind(this));
         this._nodesData = [];
         this._linksData = [];
@@ -106,7 +106,7 @@ class App {
      * @param address, the iota address of the package
      */
     private findPackageNode(address: string): INodeData | undefined {
-        const search = this._nodesData.filter(n => (n.package && n.package.iotaAddress === address));
+        const search = this._nodesData.filter(n => (n.package && n.package.mamAddress === address));
         if (search && search.length > 0) {
             return search[0];
         }
@@ -285,7 +285,7 @@ class App {
             this._nodesData.push(nodeData);
             this.directInputsForNodes(address).map((n: INodeData) => ({
                 source: address as string,
-                target: n.package.iotaAddress
+                target: n.package.mamAddress
             })).forEach(l => this._linksData.push(l));
             //must draw nodes first, then draw links, so that links and arrow can on top of nodes
             this.updateD3Nodes();

@@ -5,9 +5,9 @@
     timestamp: number;
     dataPackageId: string;
     /*
-     * iota address of the package
+     * mam address of the package
      */
-    iotaAddress: string;
+    mamAddress: string;
     /*
      * The address of MAM for each input of the data package
      */

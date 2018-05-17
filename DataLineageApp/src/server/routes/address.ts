@@ -68,7 +68,7 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
     try {
         const firstFoundJson = await waitAny(allApiCalls);
         if (firstFoundJson) {
-            const found: IDataPackage = { ...JSON.parse(firstFoundJson), iotaAddress: address } as IDataPackage;
+            const found: IDataPackage = { ...JSON.parse(firstFoundJson), mamAddress: address } as IDataPackage;
             packageCache.set(address, found);
             return found;
         }
