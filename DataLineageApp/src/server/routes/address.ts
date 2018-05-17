@@ -1,14 +1,13 @@
 ﻿import * as express from "express";
-import NodeCache =  require("node-cache");
 import IOTA = require("iota.lib.js");
 import * as Mam from "../mam.node.js";
 import config from "../server-config";
-import {IDataPackage} from "../data-package";
+import { IDataPackage } from "../data-package";
+import packageCache from "../package-cache";
+
+packageCache.loadFromFile();
 
 const router = express.Router();
-const packageCache = new NodeCache({
-    stdTTL: config.pacakgeCacheSeconds
-});
 
 /**
  * wait until one promese resolved or all promise rejected
@@ -53,7 +52,7 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
     if (!address) {
         return null;
     }
-    const cached = packageCache.get<IDataPackage>(address);
+    const cached = packageCache.get(address);
     if (cached) {
         return cached;
     }
