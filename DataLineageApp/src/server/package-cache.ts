@@ -39,7 +39,7 @@ class PackageCache {
                 const d: IFileCacheData = fileCache.getKey(key);
                 const expired = new Date(d.ttl);
                 if (d.ttl !== 0 && d.ttl <= now) continue;
-                this._memoryCache.set(key, fileCache.getKey(key), d.ttl / 1000);
+                this._memoryCache.set(key, d.data, d.ttl / 1000);
             }
         }
     }
