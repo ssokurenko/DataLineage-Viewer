@@ -5,3 +5,11 @@
 .link {
     stroke: #696969;
 }
+
+.popover.pacakge-tooltip {
+    max-width: 26rem;
+}
+
+.card.pacakge-tooltip {
+    width: 20rem;
+}

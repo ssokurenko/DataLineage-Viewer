@@ -21,3 +21,19 @@ export interface ILightweightPackage extends IDataPackage {
 export interface IStandardPackage extends IDataPackage {
     signature: string;
 }
+
+export class PacakgeHelper {
+    static isLightWeight(pkg: IDataPackage): pkg is ILightweightPackage {
+        if ("data" in pkg) {
+            return true;
+        }
+        return false;
+    }
+
+    static isStandard(pkg: IDataPackage): pkg is IStandardPackage {
+        if ("signature" in pkg) {
+            return true;
+        }
+        return false;
+    }
+}

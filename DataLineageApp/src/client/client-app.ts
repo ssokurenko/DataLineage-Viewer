@@ -1,13 +1,13 @@
 ﻿import * as $ from "jquery";
 import * as d3 from "d3";
-import {IDataPackage} from "../server/data-package";
+import { IDataPackage } from "../server/data-package";
 
 interface INodeData extends d3.SimulationNodeDatum {
     package: IDataPackage;
 }
 
-interface ILinkData extends d3.SimulationLinkDatum<INodeData>{
-    
+interface ILinkData extends d3.SimulationLinkDatum<INodeData> {
+
 }
 
 enum NotifyType {
@@ -227,12 +227,16 @@ class App {
         this._simulation.nodes(this._nodesData);
         const nodesSelection = this.nodesSelection.data(this._nodesData);
         //as we only add new packages onto the graph, no pacakges remove or update, so needn't take care about the remove and update
-        //nodesSelection.exit().remove();
+        nodesSelection.exit()
+        //before reomve the element from dom, tooltip must be hidden
+            .each((data: INodeData, index, groups) => { $(groups[index]).popover("hide"); })
+            .remove();
         //for new package node, we create cirele and set class as .node and other attributes
         nodesSelection.enter().append("circle")
             .attr("class", `${App.NodeCssClass}`)
             .attr("r", App.NodeRadius)
             .attr("fill", (d: INodeData) => this._color(((d.index ? d.index : 0) % this._colorSeries.length).toString()))
+            .popover()
             .on("click", this.onNodeClicked.bind(this));
         //.merge(nodesSelection)
     }
