@@ -82,6 +82,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="src\client\client-app.ts" />
+    <TypeScriptCompile Include="src\client\d3-package-extensions.ts" />
     <TypeScriptCompile Include="src\server\data-package.ts" />
     <TypeScriptCompile Include="src\server\package-cache.ts" />
     <TypeScriptCompile Include="src\server\routes\address.ts" />

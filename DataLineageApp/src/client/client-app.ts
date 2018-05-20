@@ -1,5 +1,7 @@
 ﻿import * as $ from "jquery";
 import * as d3 from "d3";
+import "./d3-package-extensions";
+
 import { IDataPackage } from "../server/data-package";
 
 interface INodeData extends d3.SimulationNodeDatum {
@@ -232,11 +234,11 @@ class App {
             .each((data: INodeData, index, groups) => { $(groups[index]).popover("hide"); })
             .remove();
         //for new package node, we create cirele and set class as .node and other attributes
-        nodesSelection.enter().append("circle")
+        (nodesSelection.enter().append("circle")
             .attr("class", `${App.NodeCssClass}`)
             .attr("r", App.NodeRadius)
-            .attr("fill", (d: INodeData) => this._color(((d.index ? d.index : 0) % this._colorSeries.length).toString()))
-            .popover()
+            .attr("fill", (d: INodeData) => this._color(((d.index ? d.index : 0) % this._colorSeries.length).toString())) as any)
+            .popover((d: INodeData)=>d.package)
             .on("click", this.onNodeClicked.bind(this));
         //.merge(nodesSelection)
     }

@@ -24,9 +24,8 @@ function packageDescriptionHtml(pkg: IDataPackage | ILightweightPackage | IStand
     return html;
 }
 
-
-
-d3.selection.prototype.popover = <TNodeData>(getPackage: (nodeData: TNodeData) => IDataPackage) => {
+//must use function not =>, as we need to access the real caller "this"
+d3.selection.prototype.popover = function<TNodeData>(getPackage: (nodeData: TNodeData) => IDataPackage) {
     const s = this as d3.Selection<any, any, any, any>;
     s
         .attr("data-toggle", "popover")
@@ -37,13 +36,7 @@ d3.selection.prototype.popover = <TNodeData>(getPackage: (nodeData: TNodeData) =
             `<div class="popover pacakge-tooltip" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>`)
         .attr("data-content", nodeData => packageDescriptionHtml(getPackage(nodeData)))
         .each((nodeData, index, groups: Element[]) => {
-            $(groups[index]).popover({ delay: { "show": 100, "hide": 1000 } });
+            $(groups[index]).popover({ delay: { "show": 100, "hide": 500 } });
         });
     return s;
-}
-
-//declare module "d3" {
-//    export interface Selection<GElement extends d3.BaseType, Datum, PElement extends d3.BaseType, PDatum> {
-//        popover<TNodeData>(getPackage: (nodeData: TNodeData) => IDataPackage): Selection<GElement, Datum, PElement, PDatum>;
-//    }
-//}
+};
