@@ -193,7 +193,7 @@ class App {
             const y = data.y ? (data.y + drawConfig.nodeRadius * 5) : undefined;
             let x = data.x ? (data.x - data.package.inputs.length * drawConfig.nodeRadius * 2 / 2) : undefined;
             data.package.inputs.forEach(address => {
-                this.update(address, x, y);
+                this.update(address, false, x, y);
                 if (typeof x !== "undefined") {
                     x += drawConfig.nodeRadius * 2;
                 }
@@ -232,7 +232,7 @@ class App {
      * @param initialX the prefered inital x of the new package node
      * @param initialY the prefered inital y of the new package node
      */
-    async update(address?: string, initialX?: number, initialY?: number): Promise<void> {
+    async update(address?: string, expandAll?: boolean, initialX?: number, initialY?: number): Promise<void> {
         if (!address) {
             address = this._rootPkgAddress;
         }
@@ -240,30 +240,34 @@ class App {
         if (this.findPackageNodeData(address)) return;
         //we only update when this is a root package or a pakcage is referenced as input, for the package has nothing to do with us, we ignore it
         if (address === this._rootPkgAddress || this.directInputsForNodes(address).length > 0) {
-            const pkg = await this.fetchPackage(address);
+            const pkg = await this.fetchPackage(address, expandAll);
             if (!pkg || pkg.length <= 0) {
                 notify(NotifyType.Warning, `Can't find the package with the address ${address}`);
                 return;
             }
-            const nodeData: INodeData = {
-                package: pkg[0]
-            };
-            if (address === this._rootPkgAddress) {
-                nodeData.fx = this.width / 2;
-                nodeData.fy = 20;
-            } else {
-                if (typeof initialX !== "undefined") {
-                    nodeData.x = initialX;
+            for (var i = 0; i < pkg.length; i++) {
+                const p = pkg[i];
+                const nodeData: INodeData = {
+                    package: p
+                };
+                if (p.mamAddress === this._rootPkgAddress) {
+                    nodeData.fx = this.width / 2;
+                    nodeData.fy = 20;
+                } else {
+                    if (typeof initialX !== "undefined") {
+                        nodeData.x = initialX;
+                    }
+                    if (typeof initialY !== "undefined") {
+                        nodeData.y = initialY;
+                    }
                 }
-                if (typeof initialY !== "undefined") {
-                    nodeData.y = initialY;
-                }
+                this._nodesData.push(nodeData);
+                this.directInputsForNodes(p.mamAddress).map((n: INodeData) => ({
+                    source: p.mamAddress as string,
+                    target: n.package.mamAddress
+                })).forEach(l => this._linksData.push(l));
             }
-            this._nodesData.push(nodeData);
-            this.directInputsForNodes(address).map((n: INodeData) => ({
-                source: address as string,
-                target: n.package.mamAddress
-            })).forEach(l => this._linksData.push(l));
+            
             //must draw nodes first, then draw links, so that links and arrow can on top of nodes
             this.updateD3Nodes();
             this.updateD3Links();
@@ -280,6 +284,6 @@ $("#searchBtn").on("click",
             address = $("#inputAddress").attr("placeholder") as string;
         }
         app = new App(address, "#mainGraphSvg");
-        app.update();
+        app.update(undefined, $("#expandAllCheck").is(":checked") );
     });
 export default App;
