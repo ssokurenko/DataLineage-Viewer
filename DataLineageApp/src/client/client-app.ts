@@ -1,6 +1,6 @@
 ﻿import * as $ from "jquery";
 import * as d3 from "d3";
-import "./d3-package-extensions";
+import drawConfig from "./d3-package-extensions";
 
 import { IDataPackage } from "../server/data-package";
 
@@ -32,19 +32,10 @@ class ForceNames {
 }
 
 class App {
-    private static readonly NodeRadius = 8;
-    private static readonly NodeCssClass = "node";
-    private static readonly LinkCssClass = "link";
-    private static readonly ArrowMarkerId = "arrow";
-    private static readonly ArrowXOffset = 6; //this must be same as the "6" in the path.d that defined in svg > defs > marker/#arrow
-    private static readonly ArrowColor = "#696969"; //must be same as the color of .line in main.css
-
     private readonly _svg: d3.Selection<HTMLElement, any, any, any>;
     private readonly _simulation: d3.Simulation<INodeData, ILinkData>;
     private readonly _nodesData: INodeData[];
     private readonly _linksData: ILinkData[];
-    private readonly _colorSeries = d3.schemePaired;
-    private readonly _color = d3.scaleOrdinal(this._colorSeries);
     
     constructor(private readonly _rootPkgAddress: string, svgSelector: string) {
         this._svg = d3.select(svgSelector);
@@ -54,28 +45,16 @@ class App {
         /*
          * Define arraw marker
          */
-        const defs = this._svg.append("defs");
-        defs.append("marker")
-            .attr("id", App.ArrowMarkerId)
-            .attr("markerUnits", "strokeWidth")
-            .attr("markerWidth", "25")
-            .attr("markerHeight", "25")
-            .attr("viewBox", "0 0 12 12")
-            .attr("refX", App.ArrowXOffset + App.NodeRadius)
-            .attr("refY", "6")
-            .attr("orient", "auto")
-            .append("path")
-            .attr("d", "M2,2 L10,6 L2,10 L6,6 L2,2")
-            .attr("fill", App.ArrowColor);
+        this._svg.defs();
 
         //initialize forces
         this._simulation = d3.forceSimulation<INodeData>()
-            .force(ForceNames.Collision, d3.forceCollide(App.NodeRadius * 2))
+            .force(ForceNames.Collision, d3.forceCollide(drawConfig.nodeRadius * 2))
             //make nodes repel each other
             .force(ForceNames.Charge, d3.forceManyBody().strength(-20))
             //make nodes have gravity, so they will be apt to go down
             .force(ForceNames.Gravity, d3.forceY(this.height * 10).strength(0.005))
-            .force(ForceNames.Link, d3.forceLink<INodeData, ILinkData>().id(d => d.package.mamAddress).distance(App.NodeRadius * 3))
+            .force(ForceNames.Link, d3.forceLink<INodeData, ILinkData>().id(d => d.package.mamAddress).distance(drawConfig.nodeRadius * 3))
             .on("tick", this.onSimulationTicked.bind(this));
         this._nodesData = [];
         this._linksData = [];
@@ -96,18 +75,18 @@ class App {
     }
 
     get nodesSelection(): d3.Selection<HTMLElement, INodeData, HTMLElement, INodeData> {
-        return this._svg.selectAll(`.${App.NodeCssClass}`);
+        return this._svg.selectAllNodes();
     }
 
     get linkssSelection(): d3.Selection<HTMLElement, ILinkData, HTMLElement, ILinkData> {
-        return this._svg.selectAll(`.${App.LinkCssClass}`);
+        return this._svg.selectAllLinks();
     }
 
     /**
      * find the pacakge node data by the address
      * @param address, the iota address of the package
      */
-    private findPackageNode(address: string): INodeData | undefined {
+    private findPackageNodeData(address: string): INodeData | undefined {
         const search = this._nodesData.filter(n => (n.package && n.package.mamAddress === address));
         if (search && search.length > 0) {
             return search[0];
@@ -211,12 +190,12 @@ class App {
         if (data.package && data.package.inputs) {
             //to make it simple, we just set the iniial xy of the new input package right under the current node(data param)
             //and the Collision and other forces will make they are seperated
-            const y = data.y ? (data.y + App.NodeRadius * 5) : undefined;
-            let x = data.x ? (data.x - data.package.inputs.length * App.NodeRadius * 2 / 2) : undefined;
+            const y = data.y ? (data.y + drawConfig.nodeRadius * 5) : undefined;
+            let x = data.x ? (data.x - data.package.inputs.length * drawConfig.nodeRadius * 2 / 2) : undefined;
             data.package.inputs.forEach(address => {
                 this.update(address, x, y);
                 if (typeof x !== "undefined") {
-                    x += App.NodeRadius * 2;
+                    x += drawConfig.nodeRadius * 2;
                 }
             });
         }
@@ -229,17 +208,11 @@ class App {
         this._simulation.nodes(this._nodesData);
         const nodesSelection = this.nodesSelection.data(this._nodesData);
         //as we only add new packages onto the graph, no pacakges remove or update, so needn't take care about the remove and update
-        nodesSelection.exit()
-        //before reomve the element from dom, tooltip must be hidden
-            .each((data: INodeData, index, groups) => { $(groups[index]).popover("hide"); })
-            .remove();
+        //and before reomve the element from dom, tooltip must be hidden
+        nodesSelection.exit().removePopover().remove();
+            
         //for new package node, we create cirele and set class as .node and other attributes
-        nodesSelection.enter().append("circle")
-            .attr("class", `${App.NodeCssClass}`)
-            .attr("r", App.NodeRadius)
-            .attr("fill", (d: INodeData) => this._color(((d.index ? d.index : 0) % this._colorSeries.length).toString()))
-            .popover((d: INodeData)=>d.package)
-            .on("click", this.onNodeClicked.bind(this));
+        nodesSelection.enter().packageNode().popover((d: INodeData)=>d.package).on("click", this.onNodeClicked.bind(this));
         //.merge(nodesSelection)
     }
 
@@ -250,9 +223,7 @@ class App {
         const f = this._simulation.force(ForceNames.Link) as d3.ForceLink<INodeData, ILinkData>;
         f.links(this._linksData);
         const linksSelection = this.linkssSelection.data(this._linksData);
-        linksSelection.enter().append("line")
-            .attr("class", `${App.LinkCssClass}`)
-            .attr("marker-end", "url(#arrow)");;
+        linksSelection.enter().packageLink();
     }
 
     /**
@@ -266,7 +237,7 @@ class App {
             address = this._rootPkgAddress;
         }
         //The package node already exist, need do nothing
-        if (this.findPackageNode(address)) return;
+        if (this.findPackageNodeData(address)) return;
         //we only update when this is a root package or a pakcage is referenced as input, for the package has nothing to do with us, we ignore it
         if (address === this._rootPkgAddress || this.directInputsForNodes(address).length > 0) {
             const pkg = await this.fetchPackage(address);
