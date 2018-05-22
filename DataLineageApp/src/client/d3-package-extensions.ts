@@ -25,9 +25,28 @@ function packageDescriptionHtml(pkg: IDataPackage | ILightweightPackage | IStand
 }
 
 class DrawConfig {
-    get nodeRadius() { return 8; }
+    private _nodeRadius: number | undefined;
+
+    get nodeRadius() {
+        //will try to get the circle.r from style (effected by css), if can't get, then will use default value of 8
+        if (this._nodeRadius) return this._nodeRadius;
+        const $svg = $("svg");
+        if ($svg.length > 0) {
+            try {
+                this._nodeRadius = parseFloat(d3.select($svg[0] as any).selectAll("circle").style("r"));
+            } catch (e) {
+
+            }
+        }
+        //8 is default value
+        return this._nodeRadius ? this._nodeRadius : 8;
+    }
 
     get nodeCssClass() { return "node"; }
+
+    get nodePkgCircleCssClass() { return "package"; }
+
+    get nodeInputPieCssClass() { return "input-pie"; }
 
     get linkCssClass() { return "link"; }
 
@@ -85,7 +104,7 @@ d3.selection.prototype.popover = function<TNodeData>(getPackage: (nodeData: TNod
             `<div class="popover pacakge-tooltip" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>`)
         .attr("data-content", nodeData => packageDescriptionHtml(getPackage(nodeData)))
         .each((nodeData, index, groups: Element[]) => {
-            $(groups[index]).popover({ delay: { "show": 100, "hide": 500 } });
+            $(groups[index]).popover({ delay: { "show": 100, "hide": 500 }, offset: drawConfig.nodeRadius });
         });
 };
 
@@ -94,13 +113,75 @@ d3.selection.prototype.removePopover = function() {
     return s.each((data: any, index, groups) => { $(groups[index]).popover("hide"); });
 };
 
-d3.selection.prototype.packageNode = function() {
-    const s = this as d3.Selection<any, any, any, any>;
-    return s.append("circle")
-        .attr("class", `${drawConfig.nodeCssClass}`)
-        .attr("r", drawConfig.nodeRadius)
-        .attr("fill", (d: any) => drawConfig.colors(((d.index ? d.index : 0) % drawConfig.colorSeries.length).toString()));
-};
+/**
+ * 
+ * @param pieColors: a function that will returns an colors array, and these colors will be used to draw the nodes as the pie chart
+ * @param nodeColor: a function will return the color for the node (represent a package)
+ * @param packageInfo: a function will return the IDataPackage for current node
+ * @returns {} 
+ */
+d3.selection.prototype.packageNode =
+    function<TNodeData extends d3.SimulationNodeDatum>(packageInfo: (nodeDate: TNodeData) => IDataPackage,
+        nodeColor: (nodeDate: TNodeData) => any,
+        pieColors: (nodeDate: TNodeData) => any[]) {
+        function pkgCircleId(p: IDataPackage): string {
+            return `pkg-${p.mamAddress}`;
+        }
+
+        /**
+         * draw the package itself 
+         * @param node
+         * @param pkgColor
+         */
+        function drawNodeCircle(pkg: IDataPackage, node: Element, pkgColor) {
+            d3.select(node)
+                .insert("circle")
+                .attr("id", pkgCircleId(pkg))
+                .attr("class", `${drawConfig.nodePkgCircleCssClass}`)
+                //.attr("r", radius) css will set
+                .attr("fill", pkgColor)
+                .attr("stroke", pkgColor);
+            //.attr("stroke-width", outerStrokeWidth); css will set
+        }
+
+        /**
+         * Draw the package node content as a pie chart
+         * each part in the pie chart represent a input
+         * @param colors: the colors for each part of the pie
+         */
+        function drawNodePieChart(pkg: IDataPackage, node: Element, colors: any[]) {
+            if (!colors || colors.length <= 0) {
+                return;
+            }
+            const halfRadius = drawConfig.nodeRadius / 2;
+            const halfCircumference = 2 * Math.PI * halfRadius;
+            for (let i = 0; i < colors.length; i++) {
+                const percentToDraw = (i + 1) / colors.length;
+                d3.select(node)
+                    .insert("circle", `#${pkgCircleId(pkg)} + *`)
+                    .attr("class", drawConfig.nodeInputPieCssClass)
+                    .attr("fill", "transparent")
+                    .style("stroke", colors[i])
+                    //.style("stroke-width", radius) css will set
+                    .style("stroke-dasharray", halfCircumference * percentToDraw + " " + halfCircumference);
+            }
+        }
+
+        const s = this as d3.Selection<any, any, any, any>;
+        return s.append("g")
+            .attr("class", `${drawConfig.nodeCssClass}`)
+            .each((d: TNodeData, index: number, nodes: Element[]) => {
+                const n = nodes[index];
+                const pkg = packageInfo(d);
+                //draw the package circle and the outer stroke
+                drawNodeCircle(pkg, n, nodeColor(d));
+                //no input, then need't draw the pie chart
+                if (pkg.inputs && pkg.inputs.length > 0) {
+                    drawNodePieChart(pkg, n, pieColors(d));
+                }
+                
+            });
+    };
 
 d3.selection.prototype.packageLink = function() {
     const s = this as d3.Selection<any, any, any, any>;
@@ -114,7 +195,72 @@ d3.selection.prototype.selectAllNodes = function() {
     return s.selectAll(`.${drawConfig.nodeCssClass}`);
 };
 
+/**
+ * return the value directly when d is undefined, number or string
+ * return undefined if d is INodeData
+ * @param d
+ */
+const v = (d: d3.SimulationNodeDatum | undefined | string | number): number | undefined => {
+    if (!d) return 0;
+    if (typeof (d) === "number") {
+        return d;
+    }
+    if (typeof (d) === "string") {
+        return parseFloat(d);
+    }
+    return undefined;
+}
+/**
+ * return fx if fx has value, otherwise return x
+ * @param d
+ */
+const x = (d: d3.SimulationNodeDatum | undefined | string | number): number => {
+    const temp = v(d);
+    if (typeof temp !== "undefined") {
+        return temp;
+    }
+    const nd = d as d3.SimulationNodeDatum;
+    return (nd.fx ? nd.fx : nd.x) as number;
+};
+
+/**
+ * return fy if fy has value, otherwise return y
+ * @param d
+ */
+const y = (d: d3.SimulationNodeDatum | undefined | string | number): number => {
+    const temp = v(d);
+    if (typeof temp !== "undefined") {
+        return temp;
+    }
+    const nd = d as d3.SimulationNodeDatum;
+    return (nd.fy ? nd.fy : nd.y) as number;
+};
+
+d3.selection.prototype.nodesOnSimulationTicked = function () {
+    const s = this as d3.Selection<any, any, any, any>;
+    return s.selectAllNodes()
+        .each((d: d3.SimulationNodeDatum, index: number, nodes: Element[]) => {
+            const n = nodes[index];
+            d3.select(n).selectAll("circle")
+                .attr("cx", () => x(d))
+                .attr("cy", () => y(d));
+        });
+};
+
 d3.selection.prototype.selectAllLinks = function () {
     const s = this as d3.Selection<any, any, any, any>;
     return s.selectAll(`.${drawConfig.linkCssClass}`);
+};
+
+d3.selection.prototype.linkssOnSimulationTicked = function () {
+    const s = this as d3.Selection<any, any, any, any>;
+    return s.selectAllLinks()
+        .attr("x1",
+        (d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) => x(d.source))
+        .attr("y1",
+        (d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) => y(d.source))
+        .attr("x2",
+        (d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) => x(d.target))
+        .attr("y2",
+        (d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) => y(d.target));
 };

@@ -1,5 +1,61 @@
 ﻿.node {
+    
+}
 
+circle.package {
+}
+
+@media (min-width: 576px) {
+    /* for package node */
+    .node circle.package {
+        r: 8;
+        stroke-width: 7;
+    }
+
+    /* for pie of each intputs */
+    .node circle.input-pie {
+        r: 4; /*must half .node circle.package's r */
+        stroke-width: 8; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
+    }
+}
+
+@media (min-width: 768px) {
+    .node circle.package {
+        r: 8;
+        stroke-width: 7;
+    }
+
+    /* for pie of each intputs */
+    .node circle.input-pie {
+        r: 4; /*must half .node circle.package's r */
+        stroke-width: 8; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
+    }
+}
+
+@media (min-width: 992px) {
+    .node circle.package {
+        r: 10;
+        stroke-width: 9;
+    }
+
+    /* for pie of each intputs */
+    .node circle.input-pie {
+        r: 5; /*must half .node circle.package's r */
+        stroke-width: 10; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
+    }
+}
+
+@media (min-width: 1200px) {
+    .node circle.package {
+        r: 10;
+        stroke-width: 9;
+    }
+
+    /* for pie of each intputs */
+    .node circle.input-pie {
+        r: 5; /*must half .node circle.package's r */
+        stroke-width: 10; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
+    }
 }
 
 .link {
