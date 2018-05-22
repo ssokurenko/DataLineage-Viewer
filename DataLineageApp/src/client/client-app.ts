@@ -36,6 +36,11 @@ class App {
     private readonly _simulation: d3.Simulation<INodeData, ILinkData>;
     private readonly _nodesData: INodeData[];
     private readonly _linksData: ILinkData[];
+    private _nodesAddingHandle: number|undefined;
+    /*
+     * The nodes that will be added 
+     */
+    private _pendingPackages: IDataPackage[];
     
     constructor(private readonly _rootPkgAddress: string, svgSelector: string) {
         this._svg = d3.select(svgSelector);
@@ -193,7 +198,7 @@ class App {
             const y = data.y ? (data.y + drawConfig.nodeRadius * 5) : undefined;
             let x = data.x ? (data.x - data.package.inputs.length * drawConfig.nodeRadius * 2 / 2) : undefined;
             data.package.inputs.forEach(address => {
-                this.update(address, false, x, y);
+                this.update(address, false);
                 if (typeof x !== "undefined") {
                     x += drawConfig.nodeRadius * 2;
                 }
@@ -226,13 +231,67 @@ class App {
         linksSelection.enter().packageLink();
     }
 
+    private addOnePackage(p: IDataPackage | undefined): void {
+        //check again to make usre no duplicated nodes added
+        if (!p || this.findPackageNodeData(p.mamAddress)) return;
+        const nodeData: INodeData = {
+            package: p
+        };
+        const directInputNodes = this.directInputsForNodes(p.mamAddress);
+        if (p.mamAddress === this._rootPkgAddress) {
+            nodeData.fx = this.width / 2;
+            nodeData.fy = 20;
+        } else {
+            if (directInputNodes.length > 0) {
+                nodeData.x = directInputNodes[0].x;
+                nodeData.y = directInputNodes[0].y;
+            }
+        }
+        this._nodesData.push(nodeData);
+        directInputNodes.map((n: INodeData) => ({
+            source: p.mamAddress as string,
+            target: n.package.mamAddress
+        })).forEach(l => this._linksData.push(l));
+        //must draw nodes first, then draw links, so that links and arrow can on top of nodes
+        this.updateD3Nodes();
+        this.updateD3Links();
+        this._simulation.restart();
+    }
+
+    updateByData(packages: IDataPackage[]): void {
+        if (!packages || packages.length <= 0) {
+            return;
+        }
+        if (!this._pendingPackages) {
+            this._pendingPackages = [];
+        }
+        packages.forEach(p => {
+            //as the node real append is not a onetime action, there is a possibility that the updateByData is called two times with same nodes, and the second time, the node already appended to the system
+            //so we need to check again to prevent
+            if (this.findPackageNodeData(p.mamAddress)) return;
+            this._pendingPackages.push(p);
+        });
+        if (!this._nodesAddingHandle) {
+            this._nodesAddingHandle = window.setInterval(
+                () => {
+                    if (this._pendingPackages.length <= 0) {
+                        clearInterval(this._nodesAddingHandle);
+                        this._nodesAddingHandle = undefined;
+                        return;
+                    }
+                    const p = this._pendingPackages.shift();
+                    this.addOnePackage(p);
+                },
+                300);
+        }
+    }
+
     /**
      * 
      * @param address
-     * @param initialX the prefered inital x of the new package node
-     * @param initialY the prefered inital y of the new package node
+     * @param expandAll
      */
-    async update(address?: string, expandAll?: boolean, initialX?: number, initialY?: number): Promise<void> {
+    async update(address?: string, expandAll?: boolean): Promise<void> {
         if (!address) {
             address = this._rootPkgAddress;
         }
@@ -245,33 +304,7 @@ class App {
                 notify(NotifyType.Warning, `Can't find the package with the address ${address}`);
                 return;
             }
-            for (var i = 0; i < pkg.length; i++) {
-                const p = pkg[i];
-                const nodeData: INodeData = {
-                    package: p
-                };
-                if (p.mamAddress === this._rootPkgAddress) {
-                    nodeData.fx = this.width / 2;
-                    nodeData.fy = 20;
-                } else {
-                    if (typeof initialX !== "undefined") {
-                        nodeData.x = initialX;
-                    }
-                    if (typeof initialY !== "undefined") {
-                        nodeData.y = initialY;
-                    }
-                }
-                this._nodesData.push(nodeData);
-                this.directInputsForNodes(p.mamAddress).map((n: INodeData) => ({
-                    source: p.mamAddress as string,
-                    target: n.package.mamAddress
-                })).forEach(l => this._linksData.push(l));
-            }
-            
-            //must draw nodes first, then draw links, so that links and arrow can on top of nodes
-            this.updateD3Nodes();
-            this.updateD3Links();
-            this._simulation.restart();
+            this.updateByData(pkg);
         }
     }
 }

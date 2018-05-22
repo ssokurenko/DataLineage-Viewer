@@ -58,7 +58,7 @@ export default drawConfig;
 
 d3.selection.prototype.defs = function() {
     const s = this as d3.Selection<any, any, any, any>;
-    return s.selectAll("svg").append("defs")
+    return s.append("defs")
         .append("marker")
         .attr("id", drawConfig.arrowMarkerId)
         .attr("markerUnits", "strokeWidth")

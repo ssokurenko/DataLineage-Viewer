@@ -81,4 +81,7 @@ exitHook(() => {
     packageCache.saveToFile();
 });
 
+//every 3 minutes to save the cache, as IISNode terminate the nodejs process won't trigger exitHook
+setInterval(() => packageCache.saveToFile(), 1000 * 60 * 3);
+
 export default packageCache;
