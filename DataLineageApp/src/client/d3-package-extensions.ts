@@ -169,7 +169,7 @@ d3.selection.prototype.packageNode =
                 //draw the package circle and the outer stroke
                 drawNodeCircle(pkg, n, nodeColor(d));
                 //no input, then need't draw the pie chart
-                if (pkg.inputs && pkg.inputs.length > 0) {
+                if (pkg.inputs && pkg.inputs.length > 0 && pieColors) {
                     drawNodePieChart(pkg, n, pieColors(d));
                 }
                 
