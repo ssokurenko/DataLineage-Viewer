@@ -40,6 +40,8 @@ class DrawConfig {
     get nodePkgCircleCssClass() { return "package"; }
 
     get nodeInputPieCssClass() { return "input-pie"; }
+    get plusTxtCssClass() { return "expand-plus"; }
+    get plusExpandedCssClass() { return "expanded"; }
 
     get linkCssClass() { return "link"; }
 
@@ -116,7 +118,7 @@ d3.selection.prototype.removePopover = function() {
 d3.selection.prototype.packageNode =
     function<TNodeData extends d3.SimulationNodeDatum>(packageInfo: (nodeDate: TNodeData) => IDataPackage,
         nodeColor: (nodeDate: TNodeData) => any,
-        pieColors: (nodeDate: TNodeData) => any[]) {
+        pieColors: ((nodeDate: TNodeData) => any[]) | null | undefined) {
         function pkgCircleId(p: IDataPackage): string {
             return `pkg-${p.mamAddress}`;
         }
@@ -160,6 +162,16 @@ d3.selection.prototype.packageNode =
             }
         }
 
+        function drawNodeText(pkg: IDataPackage, node: Element) {
+            const text = (pkg.inputs && pkg.inputs.length > 0) ? "+" : "";
+            const txtElement = d3.select(node).append("text")
+                .text(text).attr("class", drawConfig.plusTxtCssClass);
+                //.attr("fill", color); css will do
+            const rect: SVGRect = (txtElement.node() as any).getBBox();
+            console.log(rect);
+            return txtElement.attr("dy", (rect.height / 2) - drawConfig.nodeRadius).attr("dx", -(rect.width / 2));
+        }
+
         const s = this as d3.Selection<any, any, any, any>;
         return s.append("g")
             .attr("class", `${drawConfig.nodeCssClass}`)
@@ -172,9 +184,14 @@ d3.selection.prototype.packageNode =
                 if (pkg.inputs && pkg.inputs.length > 0 && pieColors) {
                     drawNodePieChart(pkg, n, pieColors(d));
                 }
-                
+                drawNodeText(pkg, n);
             });
     };
+
+d3.selection.prototype.packageExpanded = function() {
+    const s = this as d3.Selection<any, any, any, any>;
+    return s.selectAll(`text.${drawConfig.plusTxtCssClass}`).attr("class", `${drawConfig.plusTxtCssClass} ${drawConfig.plusExpandedCssClass}`);
+};
 
 d3.selection.prototype.packageLink = function() {
     const s = this as d3.Selection<any, any, any, any>;
@@ -237,6 +254,7 @@ d3.selection.prototype.nodesOnSimulationTicked = function () {
             d3.select(n).selectAll("circle")
                 .attr("cx", () => x(d))
                 .attr("cy", () => y(d));
+            d3.select(n).selectAll("text").attr("x", () => x(d)).attr("y", () => y(d));
         });
 };
 

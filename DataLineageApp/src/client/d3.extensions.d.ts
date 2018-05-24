@@ -22,7 +22,10 @@ declare module "d3-selection" {
          * @param nodeColor: a function will return the color for the node (represent a package)
          * @param packageInfo: a function will return the IDataPackage for current node
          */
-        packageNode<TNodeData extends d3.SimulationNodeDatum>(packageInfo: (nodeDate: TNodeData) => IDataPackage, nodeColor: (nodeDate: TNodeData) => any, pieColors: (nodeDate: TNodeData) => any[]): this;
+        packageNode<TNodeData extends d3.SimulationNodeDatum>(packageInfo: (nodeDate: TNodeData) => IDataPackage,
+            nodeColor: (nodeDate: TNodeData) => any,
+            pieColors: ((nodeDate: TNodeData) => any[]) | null | undefined): this;
+        packageExpanded(): this;
         packageLink(): this;
         selectAllNodes(): this;
         nodesOnSimulationTicked(): this;

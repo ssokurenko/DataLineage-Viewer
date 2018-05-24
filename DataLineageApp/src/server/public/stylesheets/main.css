@@ -5,6 +5,15 @@
 circle.package {
 }
 
+.node text.expand-plus {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #696969;
+}
+.node text.expand-plus.expanded {
+    display: none;
+}
+
 @media (min-width: 576px) {
     /* for package node */
     .node circle.package {

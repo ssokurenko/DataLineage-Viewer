@@ -120,8 +120,8 @@ class App {
         //for new package node, we create cirele and set class as .node and other attributes
         nodesSelection.enter()
             .packageNode<INodeData>(d => d.package,
-                d => this._packages.pacakgeColor(d.package.mamAddress),
-                d => d.package.inputs ? d.package.inputs.map(address => this._packages.pacakgeColor(address)) : [])
+                d => this._packages.pacakgeColor(d.package.mamAddress), undefined
+                /*d => d.package.inputs ? d.package.inputs.map(address => this._packages.pacakgeColor(address)) : []*/)
             .popover((d: INodeData) => d.package).on("click", this.onNodeClicked.bind(this));
         //.merge(nodesSelection)
     }
@@ -170,6 +170,20 @@ class App {
         this._simulation.restart();
     }
 
+    /**
+     * for each package node to check if all the inputs are all loaded on svg, if so , hide the expand "+"
+     */
+    private checkAndUpdateNodeExpandStatus() {
+        this.nodesSelection.each((data, index, nodes) => {
+            //for no input package, they already no expand plus chart, so needn't do anything
+            if (!data.package.inputs || data.package.inputs.length <= 0) return;
+            //all inputs are exist, so we think this pacakge is alread expanded
+            if (data.package.inputs.filter(address => !this._packages.packageExist(address, true)).length <= 0) {
+                d3.select(nodes[index]).packageExpanded();
+            }
+        });
+    }
+
     updateByData(packages: IDataPackage[]): void {
         if (!packages || packages.length <= 0) {
             return;
@@ -186,9 +200,11 @@ class App {
         if (!this._nodesAddingHandle) {
             this._nodesAddingHandle = window.setInterval(
                 () => {
+                    //all pending package are created on svg
                     if (this._pendingPackages.length <= 0) {
                         clearInterval(this._nodesAddingHandle);
                         this._nodesAddingHandle = undefined;
+                        this.checkAndUpdateNodeExpandStatus();
                         return;
                     }
                     const p = this._pendingPackages.shift();
