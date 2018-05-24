@@ -3,7 +3,7 @@ import * as bootstrap from "bootstrap";
 
 import { IDataPackage, ILightweightPackage, IStandardPackage } from "../server/data-package";
 
-function packageDescriptionHtml(pkg: IDataPackage | ILightweightPackage | IStandardPackage): string {
+export function packageDescriptionHtml(pkg: IDataPackage | ILightweightPackage | IStandardPackage): string {
     let listContent = "";
     if (pkg) {
         for (let f in pkg) {
@@ -13,7 +13,7 @@ function packageDescriptionHtml(pkg: IDataPackage | ILightweightPackage | IStand
         }
     }
 
-    const html = `<div class="card pacakge-tooltip bg-light"><div class="card-body"><h5 class="card-title">Package Information</h5></div><ul class="list-group list-group-flush">${listContent}</ul></div>`;
+    const html = `<div class="card bg-light"><div class="card-body"><h5 class="card-title">Package Information</h5></div><ul class="list-group list-group-flush">${listContent}</ul></div>`;
     return html;
 }
 
@@ -67,8 +67,7 @@ class DrawConfig {
     get colors() { return this._color; }
 }
 
-const drawConfig = new DrawConfig();
-export default drawConfig;
+export const drawConfig = new DrawConfig();
 
 d3.selection.prototype.defs = function() {
     const s = this as d3.Selection<any, any, any, any>;
@@ -79,7 +78,7 @@ d3.selection.prototype.defs = function() {
         .attr("markerWidth", "25")
         .attr("markerHeight", "25")
         .attr("viewBox", "0 0 12 12")
-        .attr("refX", drawConfig.arrowXOffset + drawConfig.nodeRadius)
+        .attr("refX", drawConfig.arrowXOffset + drawConfig.nodeRadius*2)
         .attr("refY", "6")
         .attr("orient", "auto")
         .append("path")
@@ -168,7 +167,6 @@ d3.selection.prototype.packageNode =
                 .text(text).attr("class", drawConfig.plusTxtCssClass);
                 //.attr("fill", color); css will do
             const rect: SVGRect = (txtElement.node() as any).getBBox();
-            console.log(rect);
             return txtElement.attr("dy", (rect.height / 2) - drawConfig.nodeRadius).attr("dx", -(rect.width / 2));
         }
 

@@ -1,6 +1,6 @@
 ﻿import * as $ from "jquery";
 import * as d3 from "d3";
-import drawConfig from "./d3-package-extensions";
+import { drawConfig, packageDescriptionHtml } from "./d3-package-extensions";
 
 import { IDataPackage } from "../server/data-package";
 import {PacakgesCollection} from "./packages-collection";
@@ -32,9 +32,12 @@ class ForceNames {
     static readonly Link = "Link";
 }
 
+const mainGraphSvgId = "mainGraphSvg";
+const pkgInfoContainerDivId = "pkgInfoContainerDiv";
+
 class App {
     private readonly _svg: d3.Selection<HTMLElement, any, any, any>;
-    private readonly _simulation: d3.Simulation<INodeData, ILinkData>;
+    private _simulation: d3.Simulation<INodeData, ILinkData>;
     private readonly _nodesData: INodeData[];
     private readonly _linksData: ILinkData[];
     private readonly _packages: PacakgesCollection;
@@ -46,26 +49,10 @@ class App {
     
     constructor(private readonly _rootPkgAddress: string, svgSelector: string) {
         this._svg = d3.select(svgSelector);
-        //clear
-        this._svg.selectAll("*").remove();
-
-        /*
-         * Define arraw marker
-         */
-        this._svg.defs();
-
-        //initialize forces
-        this._simulation = d3.forceSimulation<INodeData>()
-            .force(ForceNames.Collision, d3.forceCollide(drawConfig.nodeRadius * 3))
-            //make nodes repel each other
-            .force(ForceNames.Charge, d3.forceManyBody().strength(-20))
-            //make nodes have gravity, so they will be apt to go down
-            .force(ForceNames.Gravity, d3.forceY(this.height * 10).strength(0.005))
-            .force(ForceNames.Link, d3.forceLink<INodeData, ILinkData>().id(d => d.package.mamAddress).distance(drawConfig.nodeRadius * 3))
-            .on("tick", this.onSimulationTicked.bind(this));
-        this._packages = new PacakgesCollection();
         this._nodesData = [];
         this._linksData = [];
+        this._packages = new PacakgesCollection();
+        this.reset();
     }
 
     private async fetchPackage(address: string, all: boolean = false): Promise<IDataPackage[]> {
@@ -95,6 +82,16 @@ class App {
         this._svg.linkssOnSimulationTicked();
     }
 
+    private onSimulationEnd(): void {
+        let maxY: number = 0;
+        this._nodesData.forEach(d => {
+            if (d.y && d.y > maxY) {
+                maxY = d.y;
+            }
+        });
+        $(`#${mainGraphSvgId}`).height(maxY + 40);
+    }
+
     /**
      * 
      * @param data
@@ -105,6 +102,7 @@ class App {
         if (data.package && data.package.inputs) {
             data.package.inputs.forEach(address => this.update(address, false));
         }
+        $(`#${pkgInfoContainerDivId}`).empty().append(packageDescriptionHtml(data.package));
     }
 
     /*
@@ -115,14 +113,17 @@ class App {
         const nodesSelection = this.nodesSelection.data(this._nodesData);
         //as we only add new packages onto the graph, no pacakges remove or update, so needn't take care about the remove and update
         //and before reomve the element from dom, tooltip must be hidden
-        nodesSelection.exit().removePopover().remove();
+        nodesSelection.exit()
+            //.removePopover()
+            .remove();
 
         //for new package node, we create cirele and set class as .node and other attributes
         nodesSelection.enter()
             .packageNode<INodeData>(d => d.package,
-                d => this._packages.pacakgeColor(d.package.mamAddress), undefined
-                /*d => d.package.inputs ? d.package.inputs.map(address => this._packages.pacakgeColor(address)) : []*/)
-            .popover((d: INodeData) => d.package).on("click", this.onNodeClicked.bind(this));
+                d => this._packages.pacakgeColor(d.package.mamAddress),
+                undefined /*d => d.package.inputs ? d.package.inputs.map(address => this._packages.pacakgeColor(address)) : []*/)
+            //.popover((d: INodeData) => d.package) if enable popover, the removePopover should be enabled also
+            .on("click", this.onNodeClicked.bind(this));
         //.merge(nodesSelection)
     }
 
@@ -151,7 +152,7 @@ class App {
             .map(pkg => this._nodesData.filter(n => n.package.mamAddress === pkg.mamAddress)[0]);
         if (p.mamAddress === this._rootPkgAddress) {
             nodeData.fx = this.width / 2;
-            nodeData.fy = drawConfig.nodeRadius*3;
+            nodeData.fy = drawConfig.nodeRadius*4;
         } else {
             if (directInputNodes.length > 0) {
                 nodeData.x = (directInputNodes[0].x as number) +
@@ -165,8 +166,8 @@ class App {
             target: n.package.mamAddress
         })).forEach(l => this._linksData.push(l));
         //must draw nodes first, then draw links, so that links and arrow can on top of nodes
-        this.updateD3Nodes();
         this.updateD3Links();
+        this.updateD3Nodes();
         this._simulation.restart();
     }
 
@@ -235,6 +236,31 @@ class App {
             this.updateByData(pkg);
         }
     }
+
+    reset(): void {
+        //clear all
+        this._svg.selectAll("*").remove();
+        /*
+         * Define arraw marker
+         */
+        this._svg.defs();
+        this._simulation = d3.forceSimulation<INodeData>()
+            .force(ForceNames.Collision, d3.forceCollide(drawConfig.nodeRadius * 3.5))
+            //make nodes repel each other
+            .force(ForceNames.Charge, d3.forceManyBody().strength(-20))
+            //make nodes have gravity, so they will be apt to go down
+            .force(ForceNames.Gravity, d3.forceY(this.height * 10).strength(0.005))
+            .force(ForceNames.Link, d3.forceLink<INodeData, ILinkData>().id(d => d.package.mamAddress).distance(drawConfig.nodeRadius * 3))
+            .on("tick", this.onSimulationTicked.bind(this))
+            .on("end",this.onSimulationEnd.bind(this));
+        this._nodesData.length = 0;
+        this._linksData.length = 0;
+        if (this._packages) {
+            const pkgs = this._packages.getAllPackages();
+            this._packages.clear();
+            this.updateByData(pkgs);
+        }
+    }
 }
 
 let app: App;
@@ -244,7 +270,18 @@ $("#searchBtn").on("click",
         if (!address) {
             address = $("#inputAddress").attr("placeholder") as string;
         }
-        app = new App(address, "#mainGraphSvg");
+        const restHeight = ($(window).height() as number) - ($("#headerDiv").height() as number);
+        if (restHeight) {
+            $(`#${mainGraphSvgId}`).height(restHeight - 50);
+        }
+        $(`#${pkgInfoContainerDivId}`).empty();
+        app = new App(address, `#${mainGraphSvgId}`);
         app.update(undefined, $("#expandAllCheck").is(":checked") );
+    });
+$(window).on("resize",
+    () => {
+        if (app) {
+            app.reset();
+        }
     });
 export default App;

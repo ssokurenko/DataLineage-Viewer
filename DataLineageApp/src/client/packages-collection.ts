@@ -1,19 +1,19 @@
 ﻿import {IDataPackage} from "../server/data-package";
-import drawConfig from "./d3-package-extensions";
+import {drawConfig} from "./d3-package-extensions";
 
 export class PacakgesCollection {
-    private readonly _packages: IDataPackage[];
+    private _packages: IDataPackage[];
     /**
      * used as a quick dict for looking the package index in this._packages
      * key is the package address
      */
-    private readonly _packagesIndex: {[address:string]:number};
+    private _packagesIndex: {[address:string]:number};
     constructor() {
         this._packages = [];
         this._packagesIndex = {};
     }
 
-    private static isReadPackage(pkg: IDataPackage): boolean {
+    private static isRealPackage(pkg: IDataPackage): boolean {
         return typeof pkg.inputs !== "undefined" ||
             typeof pkg.dataPackageId !== "undefined" ||
             typeof pkg.timestamp !== "undefined";
@@ -22,7 +22,7 @@ export class PacakgesCollection {
     addOrUpdate(pkg: IDataPackage): void {
         if (this.packageExist(pkg.mamAddress, false)) {
             //we only upldate when pkg is a real pacakge data
-            if (!PacakgesCollection.isReadPackage(pkg)) return;
+            if (!PacakgesCollection.isRealPackage(pkg)) return;
             this._packages[this._packagesIndex[pkg.mamAddress]] = pkg;
         } else {
             this._packages.push(pkg);
@@ -41,7 +41,7 @@ export class PacakgesCollection {
         if (typeof this._packagesIndex[pkgAddress] === "undefined") return false;
         const pkg = this._packages[this._packagesIndex[pkgAddress]];
         //has fields so is a real
-        if (PacakgesCollection.isReadPackage(pkg)) {
+        if (PacakgesCollection.isRealPackage(pkg)) {
             return true;
         }
         //only has address, is a fake package
@@ -57,6 +57,16 @@ export class PacakgesCollection {
             return this._packages[this._packagesIndex[pkgAddress]];
         }
         return undefined;
+    }
+
+    getAllPackages(onlyRealPkg: boolean = true): IDataPackage[] {
+        const result: IDataPackage[] = [];
+        for (let i = 0; i < this._packages.length; i++) {
+            if (!onlyRealPkg || PacakgesCollection.isRealPackage(this._packages[i])) {
+                result.push(this._packages[i]);
+            }
+        }
+        return result;
     }
 
     /**
@@ -79,5 +89,10 @@ export class PacakgesCollection {
             return drawConfig.colors((index % drawConfig.colorSeries.length).toString());
         }
         return undefined;
+    }
+
+    clear(): void {
+        this._packages = [];
+        this._packagesIndex = {};
     }
 }
