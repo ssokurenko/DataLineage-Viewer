@@ -276,12 +276,34 @@ $("#searchBtn").on("click",
         }
         $(`#${pkgInfoContainerDivId}`).empty();
         app = new App(address, `#${mainGraphSvgId}`);
-        app.update(undefined, $("#expandAllCheck").is(":checked") );
+        const expandAll = $("#expandAllCheck").is(":checked");
+        app.update(undefined, expandAll);
+        window.history.pushState("new address", `Query Package ${address}`, `/?address=${address}&expandAll=${expandAll}`);
     });
+
 $(window).on("resize",
     () => {
         if (app) {
             app.reset();
         }
     });
+
+function getParameterByName(name: string) {
+    const url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp(`[?&]${name}(=([^&#]*)|&|#|$)`),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return "";
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+$(document as any).ready(() => {
+    const address = getParameterByName("address");
+    const expandAll = getParameterByName("expandAll");
+    if (address) {
+        app = new App(address, `#${mainGraphSvgId}`);
+        app.update(undefined, expandAll!=="false");
+    }
+});
 export default App;

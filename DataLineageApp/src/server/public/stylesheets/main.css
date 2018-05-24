@@ -57,27 +57,27 @@ circle.package {
 
 @media (min-width: 992px) {
     .node circle.package {
-        r: 18;
+        r: 16;
         stroke-width: 9;
     }
 
     /* for pie of each intputs */
     .node circle.input-pie {
-        r: 9; /*must half .node circle.package's r */
-        stroke-width: 18; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
+        r: 8; /*must half .node circle.package's r */
+        stroke-width: 16; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
     }
 }
 
 @media (min-width: 1200px) {
     .node circle.package {
-        r: 18;
+        r: 16;
         stroke-width: 9;
     }
 
     /* for pie of each intputs */
     .node circle.input-pie {
-        r: 9; /*must half .node circle.package's r */
-        stroke-width: 18; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
+        r: 8; /*must half .node circle.package's r */
+        stroke-width: 16; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
     }
 }
 
