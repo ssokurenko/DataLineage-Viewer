@@ -46,7 +46,6 @@
     <Compile Include="src\server\public\javascripts\popper.min.js" />
     <Compile Include="src\server\routes\index.ts" />
     <Content Include="package.json" />
-    <Content Include="README.md" />
     <Content Include="src\client\tsconfig.json">
       <SubType>Code</SubType>
     </Content>
