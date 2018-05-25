@@ -157,7 +157,7 @@ class App {
             if (directInputNodes.length > 0) {
                 nodeData.x = (directInputNodes[0].x as number) +
                     (Math.random() * 2 * drawConfig.nodeRadius - drawConfig.nodeRadius);
-                nodeData.y = (directInputNodes[0].y as number) + drawConfig.nodeRadius;
+                nodeData.y = (directInputNodes[0].y as number) + drawConfig.nodeRadius*3;
             }
         }
         this._nodesData.push(nodeData);
@@ -266,21 +266,28 @@ class App {
 let app: App;
 $("#searchBtn").on("click",
     () => {
+        //get address from search input or placehoder
         let address = $("#inputAddress").val() as string;
         if (!address) {
             address = $("#inputAddress").attr("placeholder") as string;
         }
+        //calculate the left space without the heard block, so we will make the svg take the whole height of the left space in the windows
+        //please note, after the d3 simulation finished, an event will be triggered and we will resize the svg to have the size just show all the nodes (maybe smaller then the initial size or larger)
         const restHeight = ($(window).height() as number) - ($("#headerDiv").height() as number);
         if (restHeight) {
-            $(`#${mainGraphSvgId}`).height(restHeight - 50);
+            $(`#${mainGraphSvgId}`).height(restHeight - 10);
         }
         $(`#${pkgInfoContainerDivId}`).empty();
         app = new App(address, `#${mainGraphSvgId}`);
         const expandAll = $("#expandAllCheck").is(":checked");
         app.update(undefined, expandAll);
+        //after search, change the url to the format with the address so when user refresh the page will show the pacakge automatically
         window.history.pushState("new address", `Query Package ${address}`, `/?address=${address}&expandAll=${expandAll}`);
     });
 
+/**
+ * when window size is changed, we need to redraw all the nodes, becasue only change the svg size won't change the nodes position
+ */
 $(window).on("resize",
     () => {
         if (app) {
@@ -288,6 +295,9 @@ $(window).on("resize",
         }
     });
 
+//Support to get params from url, for now, we support urls:
+//1. /, show the page with a serach input, and user need to input the address of the package
+//2. /address=****&expandAll=true or false, show the page and the root package is specified by the address from param, and if expandAll is true, then will auto exapnd all nodes
 function getParameterByName(name: string) {
     const url = window.location.href;
     name = name.replace(/[\[\]]/g, "\\$&");
