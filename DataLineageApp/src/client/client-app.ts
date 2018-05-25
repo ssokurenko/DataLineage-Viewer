@@ -56,7 +56,16 @@ class App {
     }
 
     private async fetchPackage(address: string, all: boolean = false): Promise<IDataPackage[]> {
-        return await $.get(`/api/address/${address}${(all ? "/all" : "")}`);
+        const alertId = "#loadingAlert";
+        try {
+            $(alertId).show();
+            const result = await $.get(`/api/address/${address}${(all ? "/all" : "")}`);
+            $(alertId).hide();
+            return result;
+        } catch (e) {
+            $(alertId).hide();
+            throw e;
+        }
     }
 
     get width(): number {
