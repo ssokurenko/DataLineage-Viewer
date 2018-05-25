@@ -13,10 +13,15 @@ For every 3 minutes, the server will save the memory cache to disk file, so that
 
 The source code is under "src" folder.
 To build the code, in the root of the project folder ("src" parent folder), run the commands:
+
 `npm install`
+
 `npm run build`
-The the webpack will build the code and copy all the required files for the application running to the folder "dist"
+
+The the webpack will build the code and copy all the required files for the application running to the folder "dist".
+
 To debug in local, run the coomand:
+
 `npm start`
 
 To Deploy the application, 
