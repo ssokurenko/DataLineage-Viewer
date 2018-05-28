@@ -11,6 +11,7 @@
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
     <ToolsVersionPromptShown>0.0</ToolsVersionPromptShown>
     <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
+    <ScriptArguments>-simulate</ScriptArguments>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -18,7 +19,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>e4efc49b-e57d-4d60-93ab-3931849dc400</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>./dist/server-app.js</StartupFile>
+    <StartupFile>./cmd_tools/cmds/mam-cmd.js</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -26,7 +27,7 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
     <NodejsPort>1337</NodejsPort>
-    <StartWebBrowser>True</StartWebBrowser>
+    <StartWebBrowser>False</StartWebBrowser>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -49,6 +50,7 @@
     <Content Include="src\client\tsconfig.json">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="src\cmds\tsconfig.json" />
     <Content Include="src\server\public\javascripts\bootstrap\bootstrap.min.js.map" />
     <Content Include="src\server\public\javascripts\jquery\jquery-3.3.1.min.map" />
     <Content Include="src\server\public\stylesheets\bootstrap\bootstrap.min.css" />
@@ -68,6 +70,7 @@
   <ItemGroup>
     <Folder Include="src\" />
     <Folder Include="src\client\" />
+    <Folder Include="src\cmds\" />
     <Folder Include="src\server\" />
     <Folder Include="src\server\public\" />
     <Folder Include="src\server\public\javascripts\" />
@@ -83,6 +86,8 @@
     <TypeScriptCompile Include="src\client\client-app.ts" />
     <TypeScriptCompile Include="src\client\d3-package-extensions.ts" />
     <TypeScriptCompile Include="src\client\d3.extensions.d.ts" />
+    <TypeScriptCompile Include="src\client\packages-collection.ts" />
+    <TypeScriptCompile Include="src\cmds\mam-cmd.ts" />
     <TypeScriptCompile Include="src\server\data-package.ts" />
     <TypeScriptCompile Include="src\server\package-cache.ts" />
     <TypeScriptCompile Include="src\server\routes\address.ts" />

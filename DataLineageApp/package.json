@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "start": "node ./dist/server-app",
-    "build": "cd ./src/server && tsc && cd .. && cd .. && webpack --mode=development",
-    "build:prod": "cd ./src/server && tsc && cd .. && cd .. && webpack --mode=production",
-    "clean:js": "del-cli dist/**"
+    "build": "cd ./src/server && tsc && cd ../cmds && tsc && cd .. && cd .. && webpack --mode=development",
+    "build:prod": "cd ./src/server && tsc && cd ../cmds && tsc && cd .. && cd .. && webpack --mode=production",
+    "build:cmds": "cd ./src/cmds && tsc",
+    "clean:js": "del-cli dist/** && del-cli cmd_tools/**",
+    "cmd:simulate": "node ./cmd_tools/cmds/mam-cmd.js -simulate"
   },
   "description": "DataLineageApp",
   "author": {
@@ -43,6 +45,7 @@
     "morgan": "^1.7.0",
     "node-cache": "^4.2.0",
     "pug": "^2.0.0-beta6",
+    "readline": "^1.3.0",
     "serve-favicon": "^2.3.0"
   },
   "-vs-binding": {

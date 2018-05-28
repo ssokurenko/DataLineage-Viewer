@@ -36,4 +36,10 @@ export class PacakgeHelper {
         }
         return false;
     }
+
+    static isRealPackage(pkg: IDataPackage): boolean {
+        return typeof pkg.inputs !== "undefined" ||
+            typeof pkg.dataPackageId !== "undefined" ||
+            typeof pkg.timestamp !== "undefined";
+    }
 }

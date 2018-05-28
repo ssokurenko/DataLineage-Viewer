@@ -51,7 +51,7 @@ class App {
         this._svg = d3.select(svgSelector);
         this._nodesData = [];
         this._linksData = [];
-        this._packages = new PacakgesCollection();
+        this._packages = new PacakgesCollection(drawConfig.colorSeries);
         this.reset();
     }
 

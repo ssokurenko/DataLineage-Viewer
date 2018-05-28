@@ -1,5 +1,4 @@
-﻿import {IDataPackage} from "../server/data-package";
-import {drawConfig} from "./d3-package-extensions";
+﻿import {IDataPackage, PacakgeHelper } from "../server/data-package";
 
 export class PacakgesCollection {
     private _packages: IDataPackage[];
@@ -8,15 +7,13 @@ export class PacakgesCollection {
      * key is the package address
      */
     private _packagesIndex: {[address:string]:number};
-    constructor() {
+    constructor(private readonly _colorsSeries: ReadonlyArray<string>|undefined) {
         this._packages = [];
         this._packagesIndex = {};
     }
 
     private static isRealPackage(pkg: IDataPackage): boolean {
-        return typeof pkg.inputs !== "undefined" ||
-            typeof pkg.dataPackageId !== "undefined" ||
-            typeof pkg.timestamp !== "undefined";
+        return PacakgeHelper.isRealPackage(pkg);
     }
 
     addOrUpdate(pkg: IDataPackage): void {
@@ -69,6 +66,10 @@ export class PacakgesCollection {
         return result;
     }
 
+    getPackagesCount(onlyRealPkg: boolean = true): number {
+        return this.getAllPackages(onlyRealPkg).length;
+    }
+
     /**
      * return all the packages that the pkgAddress is in the inputs of these packages
      * @param pkgAddress
@@ -86,7 +87,10 @@ export class PacakgesCollection {
     pacakgeColor(pkgAddress: string): string | undefined {
         if (this.packageExist(pkgAddress, false)) {
             const index = this._packagesIndex[pkgAddress];
-            return drawConfig.colors((index % drawConfig.colorSeries.length).toString());
+            if (!this._colorsSeries) {
+                return undefined;
+            }
+            return this._colorsSeries[(index % this._colorsSeries.length)];
         }
         return undefined;
     }
