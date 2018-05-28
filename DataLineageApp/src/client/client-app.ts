@@ -247,8 +247,7 @@ class App {
     }
 
     reset(): void {
-        //clear all
-        this._svg.selectAll("*").remove();
+        this.close();
         /*
          * Define arraw marker
          */
@@ -270,11 +269,24 @@ class App {
             this.updateByData(pkgs);
         }
     }
+
+    close(): void {
+        //clear all
+        this._svg.selectAll("*").remove();
+        if (this._simulation) {
+            //remove existing event handler
+            this._simulation.on("tick", null)
+                .on("end", null);
+        }
+    }
 }
 
 let app: App;
 $("#searchBtn").on("click",
     () => {
+        if (app) {
+            app.close();
+        }
         //get address from search input or placehoder
         let address = $("#inputAddress").val() as string;
         if (!address) {
