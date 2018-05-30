@@ -4,17 +4,11 @@ import path = require("path");
 import logger = require("morgan");
 import cookieParser = require("cookie-parser");
 import bodyParser = require("body-parser");
-import globalTunnel = require("global-tunnel");
 import index from "./routes/index";
 import address from "./routes/address";
 import config from "./server-config";
 
-if (config.proxy) {
-    globalTunnel.initialize({
-        host: config.proxy.host,
-        port: config.proxy.port
-    });
-}
+config.useProxyIfConfigured();
 
 var app = express();
 

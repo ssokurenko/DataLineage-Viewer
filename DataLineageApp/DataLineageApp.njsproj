@@ -88,6 +88,7 @@
     <TypeScriptCompile Include="src\client\d3.extensions.d.ts" />
     <TypeScriptCompile Include="src\client\packages-collection.ts" />
     <TypeScriptCompile Include="src\cmds\mam-cmd.ts" />
+    <TypeScriptCompile Include="src\cmds\simulate.ts" />
     <TypeScriptCompile Include="src\server\data-package.ts" />
     <TypeScriptCompile Include="src\server\package-cache.ts" />
     <TypeScriptCompile Include="src\server\routes\address.ts" />
