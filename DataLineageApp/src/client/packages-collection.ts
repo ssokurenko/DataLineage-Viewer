@@ -1,7 +1,7 @@
 ﻿import {IDataPackage, PacakgeHelper } from "../server/data-package";
 
-export class PacakgesCollection {
-    private _packages: IDataPackage[];
+export class PacakgesCollection<TPackage extends IDataPackage> {
+    private _packages: TPackage[];
     /**
      * used as a quick dict for looking the package index in this._packages
      * key is the package address
@@ -16,7 +16,7 @@ export class PacakgesCollection {
         return PacakgeHelper.isRealPackage(pkg);
     }
 
-    addOrUpdate(pkg: IDataPackage): void {
+    addOrUpdate(pkg: TPackage): void {
         if (this.packageExist(pkg.mamAddress, false)) {
             //we only upldate when pkg is a real pacakge data
             if (!PacakgesCollection.isRealPackage(pkg)) return;
@@ -49,15 +49,15 @@ export class PacakgesCollection {
         }
     }
 
-    getPackage(pkgAddress: string): IDataPackage | undefined {
+    getPackage(pkgAddress: string): TPackage | undefined {
         if (this.packageExist(pkgAddress, true)) {
             return this._packages[this._packagesIndex[pkgAddress]];
         }
         return undefined;
     }
 
-    getAllPackages(onlyRealPkg: boolean = true): IDataPackage[] {
-        const result: IDataPackage[] = [];
+    getAllPackages(onlyRealPkg: boolean = true): TPackage[] {
+        const result: TPackage[] = [];
         for (let i = 0; i < this._packages.length; i++) {
             if (!onlyRealPkg || PacakgesCollection.isRealPackage(this._packages[i])) {
                 result.push(this._packages[i]);
@@ -74,8 +74,8 @@ export class PacakgesCollection {
      * return all the packages that the pkgAddress is in the inputs of these packages
      * @param pkgAddress
      */
-    getInputTo(pkgAddress: string): IDataPackage[] {
-        const packages: IDataPackage[] = [];
+    getInputTo(pkgAddress: string): TPackage[] {
+        const packages: TPackage[] = [];
         this._packages.forEach(n => {
             if (n.inputs && n.inputs.indexOf(pkgAddress) >= 0) {
                 packages.push(n);

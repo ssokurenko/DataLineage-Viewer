@@ -40,7 +40,7 @@ class App {
     private _simulation: d3.Simulation<INodeData, ILinkData>;
     private readonly _nodesData: INodeData[];
     private readonly _linksData: ILinkData[];
-    private readonly _packages: PacakgesCollection;
+    private readonly _packages: PacakgesCollection<IDataPackage>;
     private _nodesAddingHandle: number|undefined;
     /*
      * The nodes that will be added 
