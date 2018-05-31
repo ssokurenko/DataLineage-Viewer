@@ -1,4 +1,5 @@
 ﻿import readline = require("readline");
+import fs = require("fs");
 import * as crypto from "crypto";
 import {IDataPackage, PacakgeHelper } from "../server/data-package";
 import { PacakgesCollection } from "../client/packages-collection";
@@ -6,95 +7,137 @@ import config from "../server/server-config";
 import IOTA = require("iota.lib.js");
 import * as Mam from "../server/mam.node.js";
 
+interface ISubmitIDataPackage extends IDataPackage {
+    isSubmitted?: boolean;
+}
+
 interface IBlockChainProvider {
     /**
      * @returns if success, renturn the address of the package, otherwise return undefined
      * @param package
      */
-    (p: IDataPackage): Promise<string | undefined>;
+    (p: ISubmitIDataPackage): Promise<string | undefined>;
 }
 
-export default class Simulate {
-    run() {
-        console.log("Start simulate mam data tool...");
-        console.log("input package data json line by line, and if all finished, input submit");
-        console.warn(
-            "if a pacakge has the input of another package, just use that package's dataPackageId instead, it will be converted to address after submitted");
-        console.log("input package:1 data or submit to finish");
 
-        const rl = readline.createInterface({
-            input: process.stdin,
+export default class Simulate {
+    run(args: string[]) {
+        console.log("Start simulate mam data tool...");
+        let stream: NodeJS.ReadableStream;
+        
+        const fileParamIndex = args.indexOf("--file");
+        if (fileParamIndex >= 0) {
+            stream = fs.createReadStream(args[fileParamIndex + 1]);
+        } else {
+            stream = process.stdin;
+            console.log("input package data json line by line, and if all finished, input submit");
+            console.warn("if a pacakge has the input of another package, just use that package's dataPackageId instead, it will be converted to address after submitted");
+            console.log("input package:1 data or submit to finish");
+        }
+        const rl: readline.ReadLine = readline.createInterface({
+            input: stream,
             output: process.stdout
         });
+        this.inputDataPacakges(rl);
+    }
 
-        const pkgs: PacakgesCollection = new PacakgesCollection(undefined);
+    /**
+     * check if the package read from console or file is valid or not
+     * @param pkgs, alread loaded packages
+     * @param pkg, package to be validated
+     */
+    private static validatePackage(pkgs: PacakgesCollection<ISubmitIDataPackage>, pkg: ISubmitIDataPackage): boolean {
+        if (!PacakgeHelper.isRealPackage(pkg) || !pkg.dataPackageId) {
+            console.error("The pacakge data missing required fileds");
+            prompt();
+            return false;
+        }
+        if (!pkg.timestamp) {
+            console.warn(
+                "The pacakge data has no timestamp, current time will be used as the timestamp.");
+            pkg.timestamp = Date.now();
+        }
+        if (pkg.mamAddress) {
+            console.warn(
+                "The pacakge data has a mamAddress field which shouldn't be provided, this filed will be ignored and set as the dataPackageId temporary.");
+        }
+        //use id simulate as the address so that we can resolve the input reference
+        pkg.mamAddress = pkg.dataPackageId;
+        if (pkgs.packageExist(pkg.mamAddress, false)) {
+            console.warn(
+                "The pacakge data with same dataPackageId exists, it will be updated with the new value.");
+        }
+        pkgs.addOrUpdate(pkg);
+        return true;
+    }
+
+    private inputDataPacakges(rl: readline.ReadLine): void {
+        const pkgs = new PacakgesCollection<ISubmitIDataPackage>(undefined);
         const prompt = () => console.log(`input package:${pkgs.getPackagesCount() + 1} data or submit to finish\r\n`);
         let finished = false;
         rl.on("line",
             line => {
-                    if (finished) return;
-                    if (!line) {
-                        prompt();
-                        return;
-                    }
-                    if (line.toLowerCase() === "submit") {
-                        finished = true;
-                        this.processAllPackages(pkgs).then(success => {
-                            rl.close();
-                        }).catch(() => rl.close());
-                        return;
-                    }
-
-                    try {
-                        const p: IDataPackage = JSON.parse(line);
-                        if (!PacakgeHelper.isRealPackage(p) || !p.dataPackageId) {
-                            console.error("The pacakge data missing required fileds");
-                            prompt();
-                            return;
-                        }
-                        if (!p.timestamp) {
-                            console.warn(
-                                "The pacakge data has no timestamp, current time will be used as the timestamp.");
-                            p.timestamp = Date.now();
-                        }
-                        if (p.mamAddress) {
-                            console.warn(
-                                "The pacakge data has a mamAddress field which shouldn't be provided, this filed will be ignored and set as the dataPackageId temporary.");
-                        }
-                        //use id simulate as the address so that we can resolve the input reference
-                        p.mamAddress = p.dataPackageId;
-                        if (pkgs.packageExist(p.mamAddress, false)) {
-                            console.warn(
-                                "The pacakge data with same dataPackageId exists, it will be updated with the new value.");
-                        }
-                        pkgs.addOrUpdate(p);
-                    } catch (e) {
-                        console.error(`The pacakge data is invalid, the error is {${e}}`);
-                    }
+                if (finished) return;
+                if (!line || !(line = line.trim())) {
                     prompt();
-                })
-            .on("close",
-                () => {
-                    
-                });
+                    return;
+                }
+
+                if (line.toLowerCase() === "submit") {
+                    finished = true;
+                    Simulate.processAllPackages(pkgs).then(success => {
+                        if (success) {
+                            console.log("All packages are processed");
+                        } else {
+                            console.error("Processing packages have error and stopped.");
+                        }
+                        rl.close();
+                    }).catch(() => {
+                        console.error("Processing packages have error and stopped.");
+                        rl.close();
+                    });
+                    return;
+                }
+
+                try {
+                    const p: IDataPackage = JSON.parse(line);
+                    Simulate.validatePackage(pkgs, p);
+                } catch (e) {
+                    console.error(`The pacakge data is invalid, the error is {${e}}`);
+                }
+                prompt();
+            })
+            .on("close", () => {});
     }
 
-    private async processAllPackages(pkgs: PacakgesCollection): Promise<boolean> {
+    private static async processAllPackages(pkgs: PacakgesCollection<ISubmitIDataPackage>): Promise<boolean> {
         if (pkgs.getPackagesCount() <= 0) {
             console.warn("No packages provided, exit");
-            return false;
-        }
-        const root = this.findRoot(pkgs);
-        if (!root) {
             return false;
         }
         config.useProxyIfConfigured();
         const provider = Simulate.getBlockchainProvider();
         if (!provider) return false;
-        return await this.submitPackages(provider, pkgs, root, []);
+
+        while (true) {
+            let leafNodes = Simulate.findLeafNodes(pkgs);
+            if (leafNodes.length <= 0 && pkgs.getAllPackages().filter(p => !p.isSubmitted).length > 0) {
+                //no leaf nodes but has the pacakges that are not submitted
+                //means there is circle in the packges intput references
+                console.error("There are circle in package input reference");
+                return false;
+            }
+            if (leafNodes.length <= 0) return true; //all done
+            for (let i = 0; i < leafNodes.length; i++) {
+                const p = leafNodes[i];
+                if (!await Simulate.submitPackages(provider, pkgs, p)) {
+                    return false;
+                }
+            }
+        }
     }
 
-    private findRoot(pkgs: PacakgesCollection): IDataPackage | undefined {
+    private static findRoot(pkgs: PacakgesCollection<ISubmitIDataPackage>): ISubmitIDataPackage | undefined {
         // root package is the package that doesn't be used as input for any package
         const roots = pkgs.getAllPackages(true).filter(p => pkgs.getInputTo(p.mamAddress).length <= 0);
         if (roots.length <= 0) {
@@ -110,6 +153,31 @@ export default class Simulate {
         console.log(`package ${root.mamAddress} is taken as the root pacakge`);
 
         return root;
+    }
+
+    /**
+     * A leaf node is the package node that no inputs or all the inputs are already submitted
+     */
+    private static findLeafNodes(pkgs: PacakgesCollection<ISubmitIDataPackage>): ISubmitIDataPackage[] {
+        const result = pkgs.getAllPackages(true).filter(p => {
+            //ignore alrady submitted package
+            if (p.isSubmitted) return false;
+            //no inputs
+            if (!p.inputs || p.inputs.length <= 0) {
+                return true;
+            }
+            //has inputs, and check if all inputs package is already submitted
+            for (let i = 0; i < p.inputs.length; i++) {
+                //the package that is the input to this package "p"
+                const inputPkg = pkgs.getPackage(p.inputs[i]);
+                //the inputPkg exist and is not submitted, so is not a leaf node
+                if (inputPkg && !inputPkg.isSubmitted) {
+                    return false;
+                }
+            }
+            return true;
+        });
+        return result;
     }
 
     private static keyGen(length:number): string {
@@ -134,8 +202,12 @@ export default class Simulate {
         /**
          * @returns the submitted data address
          */
-        async function submit(p: IDataPackage): Promise<string | undefined> {
-            const copied: IDataPackage = { ...p };
+        async function submit(p: ISubmitIDataPackage): Promise<string | undefined> {
+            console.log(`submitting package ${p.dataPackageId} ...`);
+            const copied: ISubmitIDataPackage = { ...p };
+            if (typeof copied.isSubmitted !== "undefined") {
+                delete copied.isSubmitted;
+            }
             delete copied.mamAddress;
             // Create Trytes
             const trytes = iota.utils.toTrytes(JSON.stringify(copied));
@@ -146,8 +218,11 @@ export default class Simulate {
                 await Mam.attach(message.payload, message.address);
                 // update mamState as new mamState
                 mamState = message.state;
+                p.isSubmitted = true;
+                console.log(`package ${p.dataPackageId} is submitted, the address is ${message.address}`);
                 return message.address;
             } catch (e) {
+                console.error(`submitting package ${p.dataPackageId} failed, the error is ${e}`);
                 return undefined;
             }
         }
@@ -159,10 +234,21 @@ export default class Simulate {
      * 
      * @param pkgs
      * @param current, the node that will be submitted to IOTA
-     * @param visited, we use this array put all visited package from root to check there is no circle in the reference
      */
-    private async submitPackages(provider:IBlockChainProvider, pkgs: PacakgesCollection, current: IDataPackage, visited: IDataPackage[]): Promise<boolean> {
-        visited.push(current);
-        throw "Not Implemented";
+    private static async submitPackages(provider: IBlockChainProvider, pkgs: PacakgesCollection<ISubmitIDataPackage>, current: ISubmitIDataPackage): Promise<boolean> {
+        if (current.isSubmitted) {
+            return true;
+        }
+        const address = await provider(current);
+        if (!address) {
+            return false;
+        }
+        const inputTo = pkgs.getInputTo(current.mamAddress);
+        inputTo.forEach(p => {
+            //replace the fack mamAddress (value is package id) in the input array to be the real address
+            p.inputs = p.inputs.map(inputAddress => inputAddress === current.mamAddress ? address : inputAddress);
+        });
+        current.mamAddress = address;
+        return true;
     }
 }

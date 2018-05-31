@@ -4,7 +4,7 @@ const argv2 = process.argv.length >= 3 ? process.argv[2].toLowerCase() : "";
 console.log(`argvs 2 is: ${argv2}`);
 switch (argv2) {
 case "-simulate":
-    (new Simulate()).run();
+        (new Simulate()).run(process.argv.slice(3));
     break;
 default:
 }
