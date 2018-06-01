@@ -78,7 +78,7 @@ d3.selection.prototype.defs = function() {
         .attr("markerWidth", "25")
         .attr("markerHeight", "25")
         .attr("viewBox", "0 0 12 12")
-        .attr("refX", drawConfig.arrowXOffset + drawConfig.nodeRadius*2)
+        .attr("refX", drawConfig.arrowXOffset + drawConfig.nodeRadius)
         .attr("refY", "6")
         .attr("orient", "auto")
         .append("path")

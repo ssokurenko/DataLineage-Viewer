@@ -273,12 +273,12 @@ class App {
          */
         this._svg.defs();
         this._simulation = d3.forceSimulation<INodeData>()
-            .force(ForceNames.Collision, d3.forceCollide(drawConfig.nodeRadius * 3.5))
+            .force(ForceNames.Collision, d3.forceCollide(drawConfig.nodeRadius * 2.5))
             //make nodes repel each other
             .force(ForceNames.Charge, d3.forceManyBody().strength(-20))
             //make nodes have gravity, so they will be apt to go down
             .force(ForceNames.Gravity, d3.forceY(this.height * 10).strength(0.005))
-            .force(ForceNames.Link, d3.forceLink<INodeData, ILinkData>().id(d => d.package.mamAddress).distance(drawConfig.nodeRadius * 3))
+            .force(ForceNames.Link, d3.forceLink<INodeData, ILinkData>().id(d => d.package.mamAddress).distance(drawConfig.nodeRadius * 2).strength(3))
             .on("tick", this.onSimulationTicked.bind(this))
             .on("end",this.onSimulationEnd.bind(this));
         this._nodesData.length = 0;
