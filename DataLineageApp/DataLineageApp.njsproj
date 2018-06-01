@@ -19,7 +19,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>e4efc49b-e57d-4d60-93ab-3931849dc400</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>./cmd_tools/cmds/mam-cmd.js</StartupFile>
+    <StartupFile>./dist/server-app.js</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>

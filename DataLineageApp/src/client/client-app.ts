@@ -153,6 +153,24 @@ class App {
         if (p.inputs) {
             //we add inputs as a fake package to get them colors
             p.inputs.forEach(address => this._packages.addOrUpdate({ mamAddress: address } as any));
+
+            //there is a possibility that one of this node's input already added before this node is added, so at the time the input node is added,
+            //as this node hasn't been added, so the link from that input node to this node won't be added, so we need to check and add all missing links
+            p.inputs
+                //find missing address from the p.inputs
+                .filter(address => {
+                    if (!this._packages.packageExist(address, true)) return false;
+                    //the input pkg exist, so check if the link is missing
+                    //if not exit, then we should renturn true to make the link add to "missingLinks"
+                    return this._linksData.filter(l => l.source === address && l.target === p.mamAddress).length <= 0;
+                })
+                //create the link for missing address
+                .map(missingInputAddress => ({
+                    source: missingInputAddress,
+                    target: p.mamAddress
+                }))
+                //add links to linkdata
+                .forEach(l => this._linksData.push(l));
         }
         const nodeData: INodeData = {
             package: p
@@ -170,10 +188,12 @@ class App {
             }
         }
         this._nodesData.push(nodeData);
+        //as this node is a new added node, so we will add all links that this pacakge as a input
         directInputNodes.map((n: INodeData) => ({
             source: p.mamAddress as string,
             target: n.package.mamAddress
         })).forEach(l => this._linksData.push(l));
+        
         //must draw nodes first, then draw links, so that links and arrow can on top of nodes
         this.updateD3Links();
         this.updateD3Nodes();
