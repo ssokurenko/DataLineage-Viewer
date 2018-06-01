@@ -31,3 +31,5 @@ To Deploy the application,
 1. go to the dist folder and run `npm install`
 1. copy everthing in dist folder and deploy them to the server.
 The project is tested with Nodejs 8.11.2
+
+.
