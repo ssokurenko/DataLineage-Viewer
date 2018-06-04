@@ -66,6 +66,7 @@
     <Content Include="src\tsconfig.base.json">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />

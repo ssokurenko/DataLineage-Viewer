@@ -11,7 +11,7 @@ before_script:
 script:
   - npm run build:prod
 before_deploy:
-  - cd ./dist
+  - cp web.config ./dist
 git:
    depth: 9999999
 deploy:
