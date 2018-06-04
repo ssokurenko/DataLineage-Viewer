@@ -12,6 +12,8 @@ script:
   - npm run build:prod
 before_deploy:
   - cd ./dist
+git:
+   depth: 9999999
 deploy:
   provider: azure_web_apps
   skip_cleanup: true
