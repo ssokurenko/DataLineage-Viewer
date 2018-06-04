@@ -11,9 +11,9 @@ before_script:
 script:
   - npm run build:prod
 before_deploy:
-  - cd ./DataLineageApp/dist
+  - cd ./dist
 deploy:
   provider: azure_web_apps
   username: admchenbo
-  password: $AZURE_WA_PASSWORD
+  password: 1234
   site: datalineage-viewer
