@@ -10,10 +10,11 @@ before_script:
   - npm run clean:js
 script:
   - npm run build:prod
-#before_deploy:
-#  - cd ./dist
+before_deploy:
+  - cd ./dist
 deploy:
   provider: azure_web_apps
+  skip_cleanup: true
   username: admchenbo
-  password: 1234
+  password: $AZURE_WA_PASSWORD
   site: datalineage-viewer
