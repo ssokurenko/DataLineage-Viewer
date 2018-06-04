@@ -11,7 +11,7 @@ before_script:
 script:
   - npm run build:prod
 before_deploy:
-  - cd ./dist
+  - cd ./DataLineageApp/dist
 deploy:
   provider: azure_web_apps
   username: admchenbo
