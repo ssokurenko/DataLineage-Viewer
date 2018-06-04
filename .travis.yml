@@ -5,6 +5,7 @@ cache:
   directories:
     - "node_modules"
 before_script:
+  - cd ./DataLineageApp
   - npm install
 script:
   - npm run build:prod
