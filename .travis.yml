@@ -15,6 +15,7 @@ before_deploy:
 deploy:
   provider: azure_web_apps
   skip_cleanup: true
+  verbose: true
   username: admchenbo
   password: $AZURE_WA_PASSWORD
   site: datalineage-viewer
