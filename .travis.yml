@@ -12,7 +12,9 @@ script:
   - npm run build:prod
 before_deploy:
   - cp web.config ./dist
+  - cp package.json ./dist
   - cd ./dist
+  - npm install
 git:
    depth: 9999999
 deploy:
