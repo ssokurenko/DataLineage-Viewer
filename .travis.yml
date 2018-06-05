@@ -14,10 +14,8 @@ before_deploy:
   - cp web.config ./dist
   - cp package.json ./dist
   - cd ./dist
-  - npm install
 git:
    depth: 9999999
-install: travis_wait 30 mvn install
 deploy:
   provider: azure_web_apps
   skip_cleanup: true
