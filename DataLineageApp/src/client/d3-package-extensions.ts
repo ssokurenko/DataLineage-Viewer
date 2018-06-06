@@ -25,13 +25,32 @@ class DrawConfig {
         if (this._nodeRadius) return this._nodeRadius;
         const $svg = $("svg");
         if ($svg.length > 0) {
-            try {
-                this._nodeRadius = parseFloat(d3.select($svg[0] as any).selectAll("circle").style("r"));
-            } catch (e) {
+            const d3Svg = d3.select($svg[0] as any);
+            const radiu = (): number | undefined => {
+                try {
+                    return parseFloat(d3Svg.selectAll("circle").style("r"));
+                } catch (e) {
+                    return undefined;
+                }
+            }
+            this._nodeRadius = radiu();
 
+            //if !_nodeRadius means there is no circle, we need to draw a hidden circle and then get the style and then remove it
+            if (!this._nodeRadius) {
+                const tmpNode = d3Svg.packageNode(() => ({
+                        timestamp: Date.now(),
+                        dataPackageId: "temp-data-package-id",
+                        mamAddress: "empty-address",
+                        inputs: []
+                    }),
+                    () => "#ffffff",
+                    null);
+                this._nodeRadius = radiu();
+                tmpNode.remove();
             }
         }
         //8 is default value
+        
         return this._nodeRadius ? this._nodeRadius : 8;
     }
 

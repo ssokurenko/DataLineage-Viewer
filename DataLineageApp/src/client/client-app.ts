@@ -46,8 +46,9 @@ class App {
      * The nodes that will be added 
      */
     private _pendingPackages: IDataPackage[];
+    private _rootPkgAddress: string;
     
-    constructor(private readonly _rootPkgAddress: string, svgSelector: string) {
+    constructor(svgSelector: string) {
         this._svg = d3.select(svgSelector);
         this._nodesData = [];
         this._linksData = [];
@@ -249,10 +250,8 @@ class App {
      * @param address
      * @param expandAll
      */
-    async update(address?: string, expandAll?: boolean): Promise<void> {
-        if (!address) {
-            address = this._rootPkgAddress;
-        }
+    async update(address: string, expandAll?: boolean): Promise<void> {
+        this._rootPkgAddress = address;
         //The package node already exist, need do nothing
         if (this._packages.packageExist(address)) return;
         //we only update when this is a root package or a pakcage is referenced as input, for the package has nothing to do with us, we ignore it
@@ -283,6 +282,7 @@ class App {
             .on("end",this.onSimulationEnd.bind(this));
         this._nodesData.length = 0;
         this._linksData.length = 0;
+        this._simulation.restart();
         if (this._packages) {
             const pkgs = this._packages.getAllPackages();
             this._packages.clear();
@@ -301,12 +301,10 @@ class App {
     }
 }
 
-let app: App;
+let app: App = new App(`#${mainGraphSvgId}`);
 $("#searchBtn").on("click",
     () => {
-        if (app) {
-            app.close();
-        }
+        app.reset();
         //get address from search input or placehoder
         let address = $("#inputAddress").val() as string;
         if (!address) {
@@ -319,9 +317,8 @@ $("#searchBtn").on("click",
             $(`#${mainGraphSvgId}`).height(restHeight - 10);
         }
         $(`#${pkgInfoContainerDivId}`).empty();
-        app = new App(address, `#${mainGraphSvgId}`);
         const expandAll = $("#expandAllCheck").is(":checked");
-        app.update(undefined, expandAll);
+        app.update(address, expandAll);
         //after search, change the url to the format with the address so when user refresh the page will show the pacakge automatically
         window.history.pushState("new address", `Query Package ${address}`, `/?address=${address}&expandAll=${expandAll}`);
     });
@@ -353,8 +350,8 @@ $(document as any).ready(() => {
     const address = getParameterByName("address");
     const expandAll = getParameterByName("expandAll");
     if (address) {
-        app = new App(address, `#${mainGraphSvgId}`);
-        app.update(undefined, expandAll!=="false");
+        app.reset();
+        app.update(address, expandAll!=="false");
     }
 });
 export default App;
