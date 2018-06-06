@@ -21,6 +21,8 @@ interface IBlockChainProvider {
 
 
 export default class Simulate {
+    private _seed: string;
+
     run(args: string[]) {
         console.log("Start simulate mam data tool...");
         let stream: NodeJS.ReadableStream;
@@ -38,8 +40,27 @@ export default class Simulate {
             input: stream,
             output: process.stdout
         });
+
+        const seedParamIndex = args.indexOf("--seed");
+        if (seedParamIndex>=0) {
+            this._seed = args[seedParamIndex + 1];
+        } else {
+            this._seed = Simulate.randomSeed();
+        }
+
         this.inputDataPacakges(rl);
     }
+
+    public static randomSeed(length: number = 81): string {
+        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ9";
+        const values = crypto.randomBytes(length);
+        const result = new Array(length);
+        for (let i = 0; i < length; i++) {
+            result[i] = charset[values[i] % charset.length];
+        }
+        return result.join("");
+    }
+
 
     /**
      * check if the package read from console or file is valid or not
@@ -180,16 +201,6 @@ export default class Simulate {
         return result;
     }
 
-    private static keyGen(length:number): string {
-        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ9";
-        const values = crypto.randomBytes(length);
-        const result = new Array(length);
-        for (let i = 0; i < length; i++) {
-            result[i] = charset[values[i] % charset.length];
-        }
-        return result.join("");
-    }
-
     private static getBlockchainProvider(): IBlockChainProvider|undefined {
         if (!config.iotaProviders || config.iotaProviders.length <= 0) {
             console.error("IOTA nodes are not configured, please config it in 'server-config.js'");
@@ -197,7 +208,7 @@ export default class Simulate {
         }
         console.log(`using ${config.iotaProviders[0]} as the node.`);
         const iota = new IOTA({ provider: config.iotaProviders[0] });
-        let mamState = Mam.init(iota, Simulate.keyGen(81));
+        let mamState = Mam.init(iota, Simulate.randomSeed());
 
         /**
          * @returns the submitted data address
