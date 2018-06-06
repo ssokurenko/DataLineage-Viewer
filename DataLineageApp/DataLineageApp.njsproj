@@ -60,6 +60,9 @@
     <Content Include="src\server\tsconfig.json">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="src\server\views\about.pug">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="src\server\views\error.pug" />
     <Content Include="src\server\views\index.pug" />
     <Content Include="src\server\views\layout.pug" />

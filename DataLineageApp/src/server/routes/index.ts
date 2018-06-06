@@ -6,4 +6,8 @@ router.get("/", (req, res) => {
     res.render("index", { title: "Data Lineage @ IOTA" });
 });
 
+router.get("/about", (req, res) => {
+    res.render("about", { title: "About Data Lineage" });
+});
+
 export default router;
