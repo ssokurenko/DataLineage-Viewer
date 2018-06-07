@@ -4,10 +4,17 @@
   "private": true,
   "scripts": {
     "start": "node ./dist/server-app",
-    "build": "cd ./src/server && tsc && cd ../cmds && tsc && cd .. && cd .. && webpack --mode=development",
-    "build:prod": "cd ./src/server && tsc && cd ../cmds && tsc && cd .. && cd .. && webpack --mode=production",
+    "start:build": "npm run build:server && npm run start",
+    "start:watch-server": "nodemon --exec \"npm run start:build\"",
+    "start:watch": "npm-run-all --parallel build:client:dev-w start:watch-server",
+    "build": "npm run build:server && npm run build:cmds && npm run build:client:dev",
+    "build:prod": "npm run build:server && npm run build:cmds && npm run build:client:prod",
     "build:cmds": "cd ./src/cmds && tsc",
-    "clean:js": "del-cli dist/** && del-cli cmd_tools/**",
+    "build:server": "cd ./src/server && tsc",
+    "build:client:dev": "webpack --mode=development",
+    "build:client:dev-w": "webpack --mode=development --watch",
+    "build:client:prod": "webpack --mode=production",
+    "clean": "del-cli dist/** && del-cli cmd_tools/**",
     "cmd:simulate": "node ./cmd_tools/cmds/mam-cmd.js -simulate"
   },
   "description": "DataLineageApp",
@@ -15,16 +22,6 @@
     "name": "DNVGL"
   },
   "devDependencies": {
-    "@types/node": "8.10.12",
-    "copy-webpack-plugin": "^4.5.1",
-    "del-cli": "^1.1.0",
-    "ts-loader": "^4.3.0",
-    "ts-node": "^6.0.3",
-    "typescript": "^2.8.3",
-    "webpack": "^4.8.1",
-    "webpack-cli": "^2.1.3"
-  },
-  "dependencies": {
     "@types/bootstrap": "^4.1.0",
     "@types/cookie-parser": "^1.4.1",
     "@types/d3": "^5.0.0",
@@ -34,6 +31,18 @@
     "@types/iota.lib.js": "^0.4.0",
     "@types/jquery": "^3.3.1",
     "@types/morgan": "^1.7.35",
+    "@types/node": "8.10.12",
+    "copy-webpack-plugin": "^4.5.1",
+    "del-cli": "^1.1.0",
+    "nodemon": "^1.17.5",
+    "npm-run-all": "^4.1.3",
+    "ts-loader": "^4.3.0",
+    "ts-node": "^6.0.3",
+    "typescript": "^2.8.3",
+    "webpack": "^4.8.1",
+    "webpack-cli": "^2.1.3"
+  },
+  "dependencies": {
     "body-parser": "^1.15.0",
     "cookie-parser": "^1.4.0",
     "crypto": "^1.0.1",
@@ -48,6 +57,14 @@
     "pug": "^2.0.0-beta6",
     "readline": "^1.3.0",
     "serve-favicon": "^2.3.0"
+  },
+  "nodemonConfig": {
+    "verbose": true,
+    "ext": "js,ts",
+    "ignore": [ "src/server/public/**", "src/server/views/*" ],
+    "watch": [
+      "src/server"
+    ]
   },
   "-vs-binding": {
     "BeforeBuild": [
