@@ -20,9 +20,13 @@ To build the code, in the root of the project folder ("src" parent folder), run 
 
 The the webpack will build the code and copy all the required files for the application running to the folder "dist".
 
-To debug in local, run the coomand:
+To debug in local, run the command:
 
 `npm start`
+
+To debug with watch, run the command:
+`npm run start:watch`
+this script will start webpack in watch mode and use nodemon to start server, so when there is the client changes, webpack will rebuild and copy the files, when there is the server changes, nodemon will find it, build and restart the server
 
 To Deploy the application, 
 1. `npm install` in the root of the project
