@@ -11,7 +11,7 @@
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
     <ToolsVersionPromptShown>0.0</ToolsVersionPromptShown>
     <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
-    <ScriptArguments>-simulate</ScriptArguments>
+    <ScriptArguments>-simulate -seed RRDLJYUQNVKAUGRETARNIILGFILLQFTQPHUYQBUY9LGTUSWMEXAAPPOU9RSYLJHTHQGSEPVBVD9TH9VFV</ScriptArguments>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -19,7 +19,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>e4efc49b-e57d-4d60-93ab-3931849dc400</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>./dist/server-app.js</StartupFile>
+    <StartupFile>./cmd_tools/cmds/mam-cmd.js</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -91,6 +91,7 @@
     <TypeScriptCompile Include="src\client\d3-package-extensions.ts" />
     <TypeScriptCompile Include="src\client\d3.extensions.d.ts" />
     <TypeScriptCompile Include="src\client\packages-collection.ts" />
+    <TypeScriptCompile Include="src\cmds\IOTAWriter.ts" />
     <TypeScriptCompile Include="src\cmds\mam-cmd.ts" />
     <TypeScriptCompile Include="src\cmds\simulate.ts" />
     <TypeScriptCompile Include="src\server\data-package.ts" />
