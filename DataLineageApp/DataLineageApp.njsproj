@@ -66,6 +66,9 @@
     <Content Include="src\server\views\error.pug" />
     <Content Include="src\server\views\index.pug" />
     <Content Include="src\server\views\layout.pug" />
+    <Content Include="src\server\views\simulate-source.pug">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="src\tsconfig.base.json">
       <SubType>Code</SubType>
     </Content>
@@ -97,6 +100,7 @@
     <TypeScriptCompile Include="src\server\data-package.ts" />
     <TypeScriptCompile Include="src\server\package-cache.ts" />
     <TypeScriptCompile Include="src\server\routes\address.ts" />
+    <TypeScriptCompile Include="src\server\routes\simulate.ts" />
     <TypeScriptCompile Include="src\server\server-app.ts" />
     <TypeScriptCompile Include="src\server\server-config.ts">
       <SubType>Code</SubType>
