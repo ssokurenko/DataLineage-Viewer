@@ -3,8 +3,8 @@ const routerUI = express.Router();
 const routerApi = express.Router();
 
 /* GET simulate UI. */
-routerUI.get("/source", (req, res) => {
-    res.render("simulate-source", { title: "Simulate" });
+routerUI.get("/publisher", (req, res) => {
+    res.render("simulate-publisher", { title: "Simulate" });
 });
 
 /**

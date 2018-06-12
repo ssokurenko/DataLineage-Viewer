@@ -1,26 +1,15 @@
-﻿import * as crypto from "crypto";
-import IOTA = require("iota.lib.js");
+﻿import IOTA = require("iota.lib.js");
 import * as Mam from "../server/mam.node.js";
+import Utilities from "../common/utilities";
 
 export default class IOTAWriter {
-
-    public static randomSeed(length: number = 81): string {
-        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ9";
-        const values = crypto.randomBytes(length);
-        const result = new Array(length);
-        for (let i = 0; i < length; i++) {
-            result[i] = charset[values[i] % charset.length];
-        }
-        return result.join("");
-    }
-
     private readonly _iota: IOTA;
     private _lastMamState;
 
     constructor(iotaProvider: string, private readonly _seeds?: string) {
         if (!_seeds) {
             console.log("seed is not provided, random generate it.");
-            this._seeds = IOTAWriter.randomSeed();
+            this._seeds = Utilities.randomSeed();
         }
         console.log(`seed is ${this._seeds}`);
         this._iota = new IOTA({ provider: iotaProvider });

@@ -4,10 +4,14 @@ import * as CopyWebpackPlugin from "copy-webpack-plugin";
 declare var __dirname;
 
 const config: webpack.Configuration = {
-    entry: "./src/client/client-app.ts",
+    entry: {
+        "client-app": "./src/client/client-app.ts",
+        "simulate-publisher": "./src/client/simulate/publisher.tsx",
+        "simulate-consumer": "./src/client/simulate/consumer.tsx"
+    },
     output: {
         path: path.resolve(__dirname, "./dist/public/javascripts"),
-        filename: "client-app.js"
+        filename: "[name].js"
     },
     module: {
         rules: [
