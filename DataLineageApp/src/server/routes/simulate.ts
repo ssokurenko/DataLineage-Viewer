@@ -10,7 +10,9 @@ routerUI.get("/publisher", (req, res) => {
 /**
  * api for add package
  */
-routerApi.post("/", (req, res) => {
+routerApi.post("/:seed/:value", (req, res) => {
+    const seed = req.params["seed"];
+    const value = req.param["valie"];
     res.render("about", { title: "About Data Lineage" });
 });
 

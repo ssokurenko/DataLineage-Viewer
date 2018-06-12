@@ -50,10 +50,10 @@ export class SeedInput extends React.Component<IProp, State>{
     }
 
     private renderConfirmedMode() {
-        return <div className="form-inline">
-                   <div className="form-group">
-                       <label htmlFor="inputPassword6">Seed Value</label>
-                       <input value={this.state.seed} type="text" id="seedReadonlyInput" readOnly={true} className="form-control mx-sm-4"/>
+        return <div className="form-group row">
+                   <label htmlFor="inputPassword6" className="col-sm-1 col-form-label">Seed Value</label>
+                   <div className="col-sm-8">
+                       <input value={this.state.seed} type="text" id="seedReadonlyInput" readOnly={true} className="form-control"/>
                    </div>
                </div>;
     }
