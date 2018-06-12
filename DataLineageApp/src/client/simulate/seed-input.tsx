@@ -7,7 +7,7 @@ export interface IProp {
 }
 
 class State {
-    seed: string | undefined;
+    seed: string = "";
     isConfirmed: boolean;
 }
 
