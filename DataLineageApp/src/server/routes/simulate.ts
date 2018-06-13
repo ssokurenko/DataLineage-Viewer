@@ -23,7 +23,7 @@ const writersCache = new NodeCache({
     useClones: false //it's importanted, becasue the writer will update its internal mamstatus to track the last address
 });
 
-async function writeData(seed: string, value: any, simple: boolean): Promise<string | undefined> {
+async function writeData(seed: string, value: any, lightweight: boolean): Promise<IDataPackage | undefined> {
     let writer = writersCache.get(seed) as IOTAWriter;
     if (!writer) {
         writer = new IOTAWriter(serverConfig.iotaProviders[0], seed);
@@ -35,44 +35,47 @@ async function writeData(seed: string, value: any, simple: boolean): Promise<str
         inputs: [],
         mamAddress: ""
     };
-    //always save data as we need it for consumer simulate
-    (pkg as ILightweightPackage).data = value;
-    if (simple) {
-
+    
+    if (lightweight) {
+        (pkg as ILightweightPackage).data = value;
     } else {
         (pkg as IStandardPackage).signature = crypto.createHash("sha256")
             .update(`${pkg.dataPackageId} ${value} ${pkg.timestamp}`)
             .digest("hex");
     }
     delete pkg.mamAddress;
-    const address = await writer.attachNew(pkg);
+    pkg.mamAddress = (await writer.attachNew(pkg)) as any;
     
-    if (!address) {
+    if (!pkg.mamAddress) {
         console.error(`failed to attach the pacakge ${JSON.stringify(pkg)} with seed ${seed}`);
+        return undefined;
     }
-    return address;
+    
+    return pkg;
 }
 
 /**
  * api for add package
  */
-routerApi.post("/simple/:seed/:value", async (req, res) => {
-        const seed = req.params["seed"];
-        const value = req.params["value"];
-        if (!seed || !value) {
-            res.end(400);
-            return;
-        }
-        res.json({ address: await writeData(seed, value, true) });
-})
-    .post("/standard/:seed/:value", async (req, res) => {
-        const seed = req.params["seed"];
-        const value = req.params["value"];
-        if (!seed || !value) {
-            res.end(400);
-            return;
-        }
-        res.json({ address: await writeData(seed, value, false) });
-    });
+routerApi.post("/lightweight/:seed/:value",
+        async (req, res) => {
+            const seed = req.params["seed"];
+            const value = req.params["value"];
+            if (!seed || !value) {
+                res.end(400);
+                return;
+            }
+            res.json(await writeData(seed, value, true));
+        })
+    .post("/standard/:seed/:value",
+        async (req, res) => {
+            const seed = req.params["seed"];
+            const value = req.params["value"];
+            if (!seed || !value) {
+                res.end(400);
+                return;
+            }
+            res.json(await writeData(seed, value, false));
+        });
 
 export {routerUI, routerApi};

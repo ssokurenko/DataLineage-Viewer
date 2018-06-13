@@ -1,13 +1,15 @@
 ﻿import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { SeedInput } from "./seed-input";
+import { LogOutput } from "./log-output";
 
-const simple = "simple";
+const lightweight = "lightweight";
 const standard = "standard";
 class State {
     seed: string | undefined;
     value = 0;
-    packageType: "simple" | "standard" = simple;
+    packageType: "lightweight" | "standard" = lightweight;
+    log: string[] = [];
 }
 
 class App extends React.Component<any, State> {
@@ -20,11 +22,22 @@ class App extends React.Component<any, State> {
         this.state = new State();
     }
 
+    private log(message: string):void {
+        this.setState({ log: this.state.log.concat([message]) });
+    }
+
     private async onAddClick(event: Event): Promise<void> {
         if (!this.state.value) {
             return;
         }
-        const address = await $.post(`/api/simulate/${this.state.packageType}/${this.state.seed}/${this.state.value}`);
+        this.log(`submitting package with value ${this.state.value}`);
+        const pkg = await $.post(`/api/simulate/${this.state.packageType}/${this.state.seed}/${this.state.value}`);
+        if (pkg) {
+            this.setState({ value: 0 });
+            this.log(`package ${JSON.stringify(pkg)} is submitted.`);
+        } else {
+            this.log(`package submitte failed.`);
+        }
         event.preventDefault();
     }
 
@@ -52,15 +65,17 @@ class App extends React.Component<any, State> {
 
                    <fieldset className="form-group">
                        <div className="row">
-                           <legend className="col-form-label col-sm-2 pt-0">Package type</legend>
+                           <legend className="col-form-label col-sm-2 pt-0">Protocol type</legend>
                            <div className="col-sm-10">
                                <div className="form-check">
-                                   <input onChange={this.onPackageTypeChanged.bind(this)} className="form-check-input" type="radio" name="packageType" id="packageTypeSimpleInput" value={simple} checked={this.state.packageType === simple}/>
-                                   <label className="form-check-label" htmlFor="packageTypeSimpleInput">Simple package</label>
+                                   <input onChange={this.onPackageTypeChanged.bind(this)} className="form-check-input" type="radio" name="packageType" id="packageTypeSimpleInput" value={lightweight} checked={this.state.packageType === lightweight}/>
+                                   <label className="form-check-label" htmlFor="packageTypeSimpleInput">{`${lightweight
+                                       } protocol`}</label>
                                </div>
                                <div className="form-check">
                                    <input onChange={this.onPackageTypeChanged.bind(this)} className="form-check-input" type="radio" name="packageType" id="packageTypeStandardInput" value={standard} checked={this.state.packageType === standard}/>
-                                   <label className="form-check-label" htmlFor="packageTypeStandardInput">Standard package</label>
+                                   <label className="form-check-label" htmlFor="packageTypeStandardInput">{`${standard
+                                       } protocol`}</label>
                                </div>
 
                            </div>
@@ -79,6 +94,10 @@ class App extends React.Component<any, State> {
         return <React.Fragment>
                    <SeedInput onSeedConfirmed={this.confirmeSeed.bind(this)}/>
                    {this.state.seed && this.renderValueInput()}
+                   <div className="row">
+                       <div className="col-sm-12">
+                           <LogOutput log={this.state.log}/></div>
+                   </div>
                </React.Fragment>;
     }
 }
