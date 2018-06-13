@@ -1,5 +1,6 @@
 ﻿import * as webpack from "webpack";
 import * as path from "path";
+import * as fs from "fs";
 import * as CopyWebpackPlugin from "copy-webpack-plugin";
 declare var __dirname;
 
@@ -10,7 +11,7 @@ const config: webpack.Configuration = {
         "simulate-consumer": "./src/client/simulate/consumer.tsx"
     },
     output: {
-        path: path.resolve(__dirname, "./dist/public/javascripts"),
+        path: path.resolve(__dirname, "./dist/public/javascripts/"),
         filename: "[name].js"
     },
     module: {
@@ -61,4 +62,44 @@ const config: webpack.Configuration = {
     devtool: "source-map"
 };
 
-export default config;
+const nodeModules: any = {};
+fs.readdirSync("node_modules")
+  .filter(function(x) {
+    return [".bin"].indexOf(x) === -1;
+  })
+  .forEach(function(mod) {
+    nodeModules[mod] = "commonjs " + mod;
+  });
+
+const configServer:webpack.Configuration = {
+    entry: {
+        "server-app": "./src/server/server-app.ts"
+    },
+    target: "node",
+    output: {
+        path: path.resolve(__dirname, "./dist"),
+        filename: "[name].js"
+    },
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                loader: "ts-loader",//can use either 'awesome-typescript-loader' or "ts-loader", 'awesome-typescript-loader' will compiler ts file in memeory so no js file is generated (finnally, js will be bundle with webpack)
+                exclude: /node_modules/,
+                options: { onlyCompileBundledFiles: true }
+            }
+        ]
+    },
+    resolve: {
+        extensions: [".tsx", ".ts", ".js", ".json"]
+    },
+    context: __dirname,
+    node: {
+        __filename: false,
+        __dirname: false
+    },
+    externals: nodeModules,
+    devtool: "source-map"
+};
+
+export default [config, configServer];

@@ -9,7 +9,7 @@ const config: {
     /**
      * This supports multi iota nodes, when query an address, the request will be sent to all the providers, and the first returned result from any nodes will be used
      */
-    iotaProviders: ["https://nodes.iota.fm", "https://iotanode.us:443"],
+    iotaProviders: ["https://iotanode.us:443", "https://nodes.iota.fm"],
     /**
      * Determin how long the package information will be keep in memonry cache (in seconds), 0 means not expired.
      */

@@ -6,12 +6,12 @@ export default class IOTAWriter {
     private readonly _iota: IOTA;
     private _lastMamState;
 
-    constructor(iotaProvider: string, private readonly _seeds?: string) {
-        if (!_seeds) {
+    constructor(iotaProvider: string, private readonly _seed?: string) {
+        if (!_seed) {
             console.log("seed is not provided, random generate it.");
-            this._seeds = Utilities.randomSeed();
+            this._seed = Utilities.randomSeed();
         }
-        console.log(`seed is ${this._seeds}`);
+        console.log(`seed is ${this._seed}`);
         this._iota = new IOTA({ provider: iotaProvider });
     }
 
@@ -23,7 +23,7 @@ export default class IOTAWriter {
             return;
         }
         console.log("finding last node in the channel...");
-        let mamState = Mam.init(this._iota, this._seeds);
+        let mamState = Mam.init(this._iota, this._seed);
         //as the seed may already exist, and after Mam.init, mamState always points to the root of the channel, we need to make mamState point to the last
         let rootAddress = Mam.getRoot(mamState);
         let preAddress: string | undefined = undefined; //if keep undefined, means 
@@ -55,7 +55,13 @@ export default class IOTAWriter {
      * @param newPackage
      */
     public async attachNew(newPackage): Promise<string | undefined> {
-        await this.initLastMamState();
+        try {
+            await this.initLastMamState();
+        } catch (e) {
+            console.error(`check the last address for seed ${this._seed} failed, exception is ${e}`);
+            return undefined;
+        } 
+        
         const json = JSON.stringify(newPackage);
         console.log(`submitting new package ${json} ...`);
         // Create Trytes

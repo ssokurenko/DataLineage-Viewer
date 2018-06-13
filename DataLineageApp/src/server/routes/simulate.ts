@@ -14,10 +14,12 @@ routerUI.get("/publisher", (req, res) => {
 });
 
 
-const writersCache = new NodeCache({ stdTTL: 3600 * 3 });
+const writersCache = new NodeCache({
+    stdTTL: 3600 * 3,
+    useClones: false //it's importanted, becasue the writer will update its internal mamstatus to track the last address
+});
 
 async function writeData(seed: string, value: any, simple: boolean): Promise<string | undefined> {
-    alert("test");
     let writer = writersCache.get(seed) as IOTAWriter;
     if (!writer) {
         writer = new IOTAWriter(serverConfig.iotaProviders[0], seed);
@@ -39,7 +41,12 @@ async function writeData(seed: string, value: any, simple: boolean): Promise<str
             .digest("hex");
     }
     delete pkg.mamAddress;
-    return await writer.attachNew(pkg);
+    const address = await writer.attachNew(pkg);
+    
+    if (!address) {
+        console.error(`failed to attach the pacakge ${JSON.stringify(pkg)} with seed ${seed}`);
+    }
+    return address;
 }
 
 /**
@@ -47,7 +54,7 @@ async function writeData(seed: string, value: any, simple: boolean): Promise<str
  */
 routerApi.post("/simple/:seed/:value", async (req, res) => {
         const seed = req.params["seed"];
-        const value = req.param["value"];
+        const value = req.params["value"];
         if (!seed || !value) {
             res.end(400);
             return;
@@ -56,7 +63,7 @@ routerApi.post("/simple/:seed/:value", async (req, res) => {
 })
     .post("/standard/:seed/:value", async (req, res) => {
         const seed = req.params["seed"];
-        const value = req.param["value"];
+        const value = req.params["value"];
         if (!seed || !value) {
             res.end(400);
             return;

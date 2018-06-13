@@ -4,16 +4,14 @@
   "private": true,
   "scripts": {
     "start": "node ./dist/server-app",
-    "start:build": "npm run build:server && npm run start",
-    "start:watch-server": "nodemon --exec \"npm run start:build\"",
-    "start:watch": "npm-run-all --parallel build:client:dev-w start:watch-server",
-    "build": "npm run build:server && npm run build:cmds && npm run build:client:dev",
-    "build:prod": "npm run build:server && npm run build:cmds && npm run build:client:prod",
+    "start:watch-server": "nodemon --exec \"npm run start\"",
+    "start:watch": "npm-run-all --parallel build:dev-w start:watch-server",
+    "build": "npm run build:cmds && npm run build:dev",
+    "build:all:prod": "npm run build:cmds && npm run build:prod",
     "build:cmds": "cd ./src/cmds && tsc",
-    "build:server": "cd ./src/server && tsc",
-    "build:client:dev": "webpack --mode=development",
-    "build:client:dev-w": "webpack --mode=development --watch",
-    "build:client:prod": "webpack --mode=production",
+    "build:dev": "webpack --mode=development",
+    "build:dev-w": "webpack --mode=development --watch",
+    "build:prod": "webpack --mode=production",
     "clean": "del-cli dist/** && del-cli cmd_tools/**",
     "cmd:simulate": "node ./cmd_tools/cmds/mam-cmd.js -simulate"
   },
@@ -65,13 +63,13 @@
   },
   "nodemonConfig": {
     "verbose": true,
-    "ext": "js,ts",
+    "ext": "js",
     "ignore": [
-      "src/server/public/**",
-      "src/server/views/*"
+      "dist/views/**",
+      "dist/public/**"
     ],
     "watch": [
-      "src/server"
+      "dist"
     ]
   },
   "-vs-binding": {
