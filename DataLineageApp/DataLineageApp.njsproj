@@ -66,6 +66,7 @@
     <Content Include="src\server\views\error.pug" />
     <Content Include="src\server\views\index.pug" />
     <Content Include="src\server\views\layout.pug" />
+    <Content Include="src\server\views\simulate-processor.pug" />
     <Content Include="src\server\views\simulate-publisher.pug">
       <SubType>Code</SubType>
     </Content>
@@ -96,7 +97,7 @@
     <TypeScriptCompile Include="src\client\d3-package-extensions.ts" />
     <TypeScriptCompile Include="src\client\d3.extensions.d.ts" />
     <TypeScriptCompile Include="src\client\packages-collection.ts" />
-    <TypeScriptCompile Include="src\client\simulate\consumer.tsx" />
+    <TypeScriptCompile Include="src\client\simulate\processor.tsx" />
     <TypeScriptCompile Include="src\client\simulate\publisher.tsx" />
     <TypeScriptCompile Include="src\client\simulate\seed-input.tsx">
       <SubType>Code</SubType>

@@ -10,7 +10,11 @@ const routerApi = express.Router();
 
 /* GET simulate UI. */
 routerUI.get("/publisher", (req, res) => {
-    res.render("simulate-publisher", { title: "Simulate" });
+    res.render("simulate-publisher", { title: "Simulate - publisher" });
+});
+
+routerUI.get("/processor", (req, res) => {
+    res.render("simulate-processor", { title: "Simulate - processor" });
 });
 
 

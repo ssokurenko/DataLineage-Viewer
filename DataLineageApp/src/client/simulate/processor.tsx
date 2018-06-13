@@ -8,4 +8,4 @@ class App extends React.Component<any, any> {
     }
 }
 
-ReactDOM.render(<App />, $("#simlate-consumer-app")[0] as any);
+ReactDOM.render(<App />, $("#simlate-processor-app")[0] as any);
