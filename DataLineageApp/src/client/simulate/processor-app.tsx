@@ -1,7 +1,7 @@
 ﻿import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { Publisher } from "./publisher";
-import { InputsSelector } from "./inputs-selector";
+import { InputChannelSelector } from "./input-channel-selector";
 
 class State {
     seed: string;
@@ -26,7 +26,7 @@ class App extends React.Component<any, State> {
     render() {
         return <React.Fragment>
             {(!this.state.seed || this.state.inputsConfirmed) && <Publisher seed={this.state.seed} inputsAddress={this.state.inputsAddress} onSeedConfirmed={this.onSeedConfirmed.bind(this)} />}
-            {(this.state.seed && !this.state.inputsConfirmed) && <InputsSelector onInputsConfirmed={this.onInputsConfirmed.bind(this)} />}
+            {(this.state.seed && !this.state.inputsConfirmed) && <InputChannelSelector onInputsConfirmed={this.onInputsConfirmed.bind(this)} />}
         </React.Fragment>;
     }
 }

@@ -8,7 +8,7 @@ class State {
     inputsAddress: string[] = [];
 }
 
-export class InputsSelector extends React.Component<IProp, State> {
+export class InputChannelSelector extends React.Component<IProp, State> {
     constructor(props: IProp) {
         super(props);
         this.state = new State();

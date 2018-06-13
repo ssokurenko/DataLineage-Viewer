@@ -105,7 +105,7 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="src\client\simulate\publisher.tsx" />
-    <TypeScriptCompile Include="src\client\simulate\inputs-selector.tsx">
+    <TypeScriptCompile Include="src\client\simulate\input-channel-selector.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="src\client\simulate\seed-input.tsx">
