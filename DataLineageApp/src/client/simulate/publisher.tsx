@@ -1,25 +1,40 @@
 ﻿import * as React from "react";
-import * as ReactDOM from "react-dom";
 import { SeedInput } from "./seed-input";
 import { LogOutput } from "./log-output";
 
 const lightweight = "lightweight";
 const standard = "standard";
+
+export interface IProp {
+    inputsAddress: string[];
+    seed?: string;
+    onSeedConfirmed?(seed: string);
+}
+
 class State {
+    constructor(seed?: string) {
+        if (seed) {
+            this.seed = seed;
+        }
+    }
+
     seed: string | undefined;
     value = 0;
     packageType: "lightweight" | "standard" = lightweight;
     log: string[] = [];
 }
 
-class App extends React.Component<any, State> {
+export class Publisher extends React.Component<IProp, State> {
     private confirmeSeed(seed: string):void {
         this.setState({ seed: seed });
+        if (this.props.onSeedConfirmed) {
+            this.props.onSeedConfirmed(seed);
+        }
     }
 
     constructor(props: any) {
         super(props);
-        this.state = new State();
+        this.state = new State(props.seed);
     }
 
     private log(message: string):void {
@@ -92,7 +107,7 @@ class App extends React.Component<any, State> {
 
     render() {
         return <React.Fragment>
-                   <SeedInput onSeedConfirmed={this.confirmeSeed.bind(this)}/>
+                   <SeedInput seed={this.state.seed} onSeedConfirmed={this.confirmeSeed.bind(this)}/>
                    {this.state.seed && this.renderValueInput()}
                    <div className="row">
                        <div className="col-sm-12">
@@ -101,5 +116,3 @@ class App extends React.Component<any, State> {
                </React.Fragment>;
     }
 }
-
-ReactDOM.render(<App />, document.getElementById("simlate-publisher-app"));

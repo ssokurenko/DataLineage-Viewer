@@ -3,18 +3,23 @@ import Utilities from "../../common/utilities";
 
 
 export interface IProp {
+    seed?: string;
     onSeedConfirmed(seed: string): void;
 }
 
 class State {
-    seed: string = "";
+    constructor(seed?: string) {
+        this.seed = seed ? seed : "";
+        this.isConfirmed = seed ? true : false;
+    }
+    seed: string;
     isConfirmed: boolean;
 }
 
 export class SeedInput extends React.Component<IProp, State>{
     constructor(props: IProp) {
         super(props);
-        this.state = new State();
+        this.state = new State(props.seed);
     }
 
     private onSeedChanged(event: React.ChangeEvent<HTMLInputElement>) {

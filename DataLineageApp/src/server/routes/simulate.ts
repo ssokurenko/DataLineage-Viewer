@@ -19,7 +19,7 @@ routerUI.get("/processor", (req, res) => {
 
 
 const writersCache = new NodeCache({
-    stdTTL: 3600 * 3,
+    stdTTL: 3600 * 24,
     useClones: false //it's importanted, becasue the writer will update its internal mamstatus to track the last address
 });
 

@@ -100,9 +100,12 @@
     <TypeScriptCompile Include="src\client\simulate\log-output.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="src\client\simulate\processor.tsx" />
+    <TypeScriptCompile Include="src\client\simulate\processor-app.tsx" />
+    <TypeScriptCompile Include="src\client\simulate\publisher-app.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\client\simulate\publisher.tsx" />
-    <TypeScriptCompile Include="src\client\simulate\publishers-selector.tsx">
+    <TypeScriptCompile Include="src\client\simulate\inputs-selector.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="src\client\simulate\seed-input.tsx">

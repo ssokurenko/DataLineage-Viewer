@@ -7,8 +7,8 @@ declare var __dirname;
 const config: webpack.Configuration = {
     entry: {
         "client-app": "./src/client/client-app.ts",
-        "simulate-publisher": "./src/client/simulate/publisher.tsx",
-        "simulate-processor": "./src/client/simulate/processor.tsx"
+        "simulate-publisher": "./src/client/simulate/publisher-app.tsx",
+        "simulate-processor": "./src/client/simulate/processor-app.tsx"
     },
     output: {
         path: path.resolve(__dirname, "./dist/public/javascripts/"),
