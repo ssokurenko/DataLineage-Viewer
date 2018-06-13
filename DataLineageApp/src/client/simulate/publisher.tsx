@@ -1,11 +1,16 @@
 ﻿import * as React from "react";
 import { SeedInput } from "./seed-input";
 import { LogOutput } from "./log-output";
+import { ChannelPackagesList } from "./channel-packages-list";
+import { IDataPackage } from "../../server/data-package";
 
 const lightweight = "lightweight";
 const standard = "standard";
 
 export interface IProp {
+    /**
+     * The root address of the channel, which packages will be used to be selected as a input for current new package
+     */
     inputsAddress: string[];
     seed?: string;
     onSeedConfirmed?(seed: string);
@@ -64,6 +69,10 @@ export class Publisher extends React.Component<IProp, State> {
         this.setState({packageType: event.target.value as any});
     }
 
+    private onPackageSelectedAsInput(pkg: IDataPackage, selected: boolean) {
+
+    }
+
     private renderValueInput() {
         return <div>
                    <div className="form-group row">
@@ -103,6 +112,12 @@ export class Publisher extends React.Component<IProp, State> {
                        </div>
                    </div>
                </div>;
+    }
+
+    private renderChannelPackages() {
+        return <div className="row">
+            {this.props.inputsAddress && this.props.inputsAddress.map(a=><ChannelPackagesList rootAddress={a} onPackageSelected={this.onPackageSelectedAsInput.bind(this)}/>)}
+        </div>;
     }
 
     render() {

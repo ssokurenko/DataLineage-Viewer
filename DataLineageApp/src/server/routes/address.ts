@@ -9,6 +9,10 @@ packageCache.loadFromFile();
 
 const router = express.Router();
 
+interface IDataPackageEx extends IDataPackage {
+    nextRoot: string;
+}
+
 /**
  * wait until one promese resolved or all promise rejected
  * @param promises
@@ -48,12 +52,13 @@ function waitAny<T>(promises: Promise<T>[]): Promise<T> {
     return result;
 }
 
-async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage | null> {
+async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackageEx | null> {
     if (!address) {
         return null;
     }
-    const cached = packageCache.get(address);
-    if (cached) {
+    const cached = packageCache.get<IDataPackageEx>(address);
+    //for old cache, there is no nextRoot, so we need to check this and update them
+    if (cached && cached.nextRoot) {
         return cached;
     }
     const allApiCalls = config.iotaProviders.map(async (p) => {
@@ -61,13 +66,16 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
         const mamState = Mam.init(iota);
         //ToDo: if fetchSingle get exception, what will happen
         const mamResult: { payload: string, nextRoot: string } = await Mam.fetchSingle(address, "public", null);
-        return iota.utils.fromTrytes(mamResult.payload);
+        return {
+            json: iota.utils.fromTrytes(mamResult.payload),
+            nextRoot: mamResult.nextRoot
+        };
     });
 
     try {
-        const firstFoundJson = await waitAny(allApiCalls);
-        if (firstFoundJson) {
-            const found: IDataPackage = { ...JSON.parse(firstFoundJson), mamAddress: address } as IDataPackage;
+        const firstFound = await waitAny(allApiCalls);
+        if (firstFound) {
+            const found: IDataPackageEx = { ...JSON.parse(firstFound.json), mamAddress: address, nextRoot: firstFound.nextRoot } as IDataPackageEx;
             packageCache.set(address, found);
             return found;
         }
@@ -94,8 +102,12 @@ router.get("/:address/:all?", async (req, res) => {
     }
     while (fetchAddresses.length > 0) {
         address = fetchAddresses.shift();
-        const pkg = await fetchPacakgeInfoWithCache(address);
+        let pkg = await fetchPacakgeInfoWithCache(address);
         if (pkg) {
+            //copy it
+            pkg = { ...pkg };
+            //remove nextRoot
+            delete pkg.nextRoot;
             allPacakges.push(pkg);
             if (req.params.all && pkg.inputs && pkg.inputs.length > 0) {
                 pkg.inputs.forEach(a => fetchAddresses.push(a));
@@ -104,6 +116,31 @@ router.get("/:address/:all?", async (req, res) => {
     }
     
     res.json(allPacakges);
-});
+})
+/*
+ * Get all packages in the channel
+ */
+    .get("/channel/:rootAddress", async (req, res) => {
+        const allPacakges: IDataPackage[] = [];
+        let rootAddress = req.params["rootAddress"];
+        if (!rootAddress) {
+            res.end(400);
+            return;
+        }
+        while (true) {
+            let pkg = await fetchPacakgeInfoWithCache(rootAddress);
+            if (!pkg) {
+                break;
+            }
+            rootAddress = pkg.nextRoot;
+            pkg = { ...pkg };
+            delete pkg.nextRoot;
+            allPacakges.push(pkg);
+            if (!rootAddress) {
+                break;
+            }
+        }
+        res.json(allPacakges);
+    });
 
 export default router;

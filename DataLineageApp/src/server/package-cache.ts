@@ -63,12 +63,12 @@ class PackageCache {
         fileCache.save();
     }
 
-    get(address: string): IDataPackage | undefined {
+    get<T>(address: string): T | undefined {
         if (!this._memoryCache) return undefined;
-        return this._memoryCache.get<IDataPackage>(address);
+        return this._memoryCache.get<T>(address);
     }
 
-    set(address: string, pkg: IDataPackage): void {
+    set<T>(address: string, pkg: T): void {
         if (!this._memoryCache) this.createMemoryCache();
         this._memoryCache.set(address, pkg);
     }

@@ -97,6 +97,9 @@
     <TypeScriptCompile Include="src\client\d3-package-extensions.ts" />
     <TypeScriptCompile Include="src\client\d3.extensions.d.ts" />
     <TypeScriptCompile Include="src\client\packages-collection.ts" />
+    <TypeScriptCompile Include="src\client\simulate\channel-packages-list.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\client\simulate\log-output.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
