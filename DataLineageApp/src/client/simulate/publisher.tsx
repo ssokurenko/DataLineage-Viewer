@@ -27,6 +27,7 @@ class State {
     value = 0;
     packageType: "lightweight" | "standard" = lightweight;
     log: string[] = [];
+    packageInputsAddress: string[] = [];
 }
 
 export class Publisher extends React.Component<IProp, State> {
@@ -70,7 +71,18 @@ export class Publisher extends React.Component<IProp, State> {
     }
 
     private onPackageSelectedAsInput(pkg: IDataPackage, selected: boolean) {
-
+        const index = this.state.packageInputsAddress.indexOf(pkg.mamAddress);
+        if (selected) {
+            if (index < 0) {
+                this.setState({ packageInputsAddress: this.state.packageInputsAddress.concat([pkg.mamAddress]) });
+            }
+        } else {
+            if (index >= 0) {
+                this.setState({
+                    packageInputsAddress: this.state.packageInputsAddress.filter(a => a !== pkg.mamAddress)
+                });
+            }
+        }
     }
 
     private renderValueInput() {
@@ -116,13 +128,14 @@ export class Publisher extends React.Component<IProp, State> {
 
     private renderChannelPackages() {
         return <div className="row">
-            {this.props.inputsAddress && this.props.inputsAddress.map(a=><ChannelPackagesList rootAddress={a} onPackageSelected={this.onPackageSelectedAsInput.bind(this)}/>)}
+            {this.props.inputsAddress && this.props.inputsAddress.map(a => <ChannelPackagesList key={a} rootAddress={a} selectedInputsAddress={this.state.packageInputsAddress} onPackageSelected={this.onPackageSelectedAsInput.bind(this)}/>)}
         </div>;
     }
 
     render() {
         return <React.Fragment>
                    <SeedInput seed={this.state.seed} onSeedConfirmed={this.confirmeSeed.bind(this)}/>
+                   {this.renderChannelPackages()}
                    {this.state.seed && this.renderValueInput()}
                    <div className="row">
                        <div className="col-sm-12">

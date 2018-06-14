@@ -88,35 +88,8 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackageE
     }
 }
 
-/* GET package information by address api
- supported urls:
- api/address/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY         -> only get this pacakge inforamtion
- api/address/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY/all     -> get pcakge and all it's inputs recursively
- */
-router.get("/:address/:all?", async (req, res) => {
-    const allPacakges: IDataPackage[] = [];
-    const fetchAddresses: string[] = [];
-    let address = req.params["address"];
-    if (address) {
-        fetchAddresses.push(address);
-    }
-    while (fetchAddresses.length > 0) {
-        address = fetchAddresses.shift();
-        let pkg = await fetchPacakgeInfoWithCache(address);
-        if (pkg) {
-            //copy it
-            pkg = { ...pkg };
-            //remove nextRoot
-            delete pkg.nextRoot;
-            allPacakges.push(pkg);
-            if (req.params.all && pkg.inputs && pkg.inputs.length > 0) {
-                pkg.inputs.forEach(a => fetchAddresses.push(a));
-            }
-        }
-    }
-    
-    res.json(allPacakges);
-})
+
+router
 /*
  * Get all packages in the channel
  */
@@ -140,6 +113,35 @@ router.get("/:address/:all?", async (req, res) => {
                 break;
             }
         }
+        res.json(allPacakges);
+    })
+ /* GET package information by address api
+ supported urls:
+ api/address/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY         -> only get this pacakge inforamtion
+ api/address/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY/all     -> get pcakge and all it's inputs recursively
+ */
+    .get("/:address/:all?", async (req, res) => {
+        const allPacakges: IDataPackage[] = [];
+        const fetchAddresses: string[] = [];
+        let address = req.params["address"];
+        if (address) {
+            fetchAddresses.push(address);
+        }
+        while (fetchAddresses.length > 0) {
+            address = fetchAddresses.shift();
+            let pkg = await fetchPacakgeInfoWithCache(address);
+            if (pkg) {
+                //copy it
+                pkg = { ...pkg };
+                //remove nextRoot
+                delete pkg.nextRoot;
+                allPacakges.push(pkg);
+                if (req.params.all && pkg.inputs && pkg.inputs.length > 0) {
+                    pkg.inputs.forEach(a => fetchAddresses.push(a));
+                }
+            }
+        }
+
         res.json(allPacakges);
     });
 

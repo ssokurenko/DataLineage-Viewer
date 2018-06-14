@@ -3,21 +3,23 @@ import { IDataPackage, PacakgeHelper } from "../../server/data-package";
 
 export interface IProp {
     rootAddress: string;
+    selectedInputsAddress: string[];
     onPackageSelected(pkg: IDataPackage, selected: boolean);
 }
 
 interface IPackageState {
     package: IDataPackage;
-    selected: boolean;
+    //selected: boolean;
 }
 
 class State {
-    packages: IPackageState[];
+    packages: IPackageState[] = [];
 }
 
 export class ChannelPackagesList extends React.Component<IProp, State> {
     constructor(props: IProp) {
         super(props);
+        this.state = new State();
     }
 
     private static getValueOrSignature(pkg: IDataPackage): string {
@@ -28,12 +30,12 @@ export class ChannelPackagesList extends React.Component<IProp, State> {
 
     private onSelectChanged(pkg: IDataPackage, event: React.ChangeEvent<HTMLInputElement>) {
         const selected = event.target.checked;
-        this.setState({
-            packages: this.state.packages.map(ps => {
-                if (ps.package.dataPackageId !== pkg.dataPackageId) return ps;
-                return { ...ps, selected: selected}
-            })
-        });
+        //this.setState({
+        //    packages: this.state.packages.map(ps => {
+        //        if (ps.package.mamAddress !== pkg.mamAddress) return ps;
+        //        return { ...ps, selected: selected}
+        //    })
+        //});
         this.props.onPackageSelected(pkg, selected);
     }
 
@@ -42,13 +44,13 @@ export class ChannelPackagesList extends React.Component<IProp, State> {
         this.setState({
             packages: pkgs.map(p => ({
                 package: p,
-                selected: false
+                //selected: false
             }))
         });
     }
 
     render() {
-        return <div className="card" key={this.props.rootAddress}>
+        return <div className="card">
                    <div className="card-header">
                        {`Packages in the channel ${this.props.rootAddress}`}
                    </div>
@@ -62,8 +64,8 @@ export class ChannelPackagesList extends React.Component<IProp, State> {
                            </tr>
                            </thead>
                            <tbody>
-                           {this.state.packages.map(ps => <tr key={ps.package.dataPackageId}>
-                                                              <th scope="row"><input checked={ps.selected} onChange={this.onSelectChanged.bind(this, ps.package)} type="checkbox"/></th>
+                           {this.state.packages.map((ps, i) => <tr key={ps.package.mamAddress}>
+                                                              <th scope="row"><input checked={this.props.selectedInputsAddress && this.props.selectedInputsAddress.indexOf(ps.package.mamAddress)>=0} onChange={this.onSelectChanged.bind(this, ps.package)} type="checkbox"/></th>
                                                               <td>{ps.package.dataPackageId}</td>
                                                               <td>{ChannelPackagesList.getValueOrSignature(ps.package)
                                                               }</td>
