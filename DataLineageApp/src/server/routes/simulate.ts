@@ -23,7 +23,13 @@ const writersCache = new NodeCache({
     useClones: false //it's importanted, becasue the writer will update its internal mamstatus to track the last address
 });
 
-async function writeData(seed: string, value: any, lightweight: boolean, inputs: string[]): Promise<IDataPackage | undefined> {
+interface IPackageSubmitData {
+    inputs?: string[];
+    value;
+    dataPackageId?: string;
+}
+
+async function writeData(seed: string, data: IPackageSubmitData, lightweight: boolean): Promise<IDataPackage | undefined> {
     let writer = writersCache.get(seed) as IOTAWriter;
     if (!writer) {
         writer = new IOTAWriter(serverConfig.iotaProviders[0], seed);
@@ -31,17 +37,17 @@ async function writeData(seed: string, value: any, lightweight: boolean, inputs:
     }
     const pkg: IDataPackage = {
         timestamp: Date.now(),
-        dataPackageId: uuid(),
-        inputs: inputs,
+        dataPackageId: data.dataPackageId ? data.dataPackageId : uuid(),
+        inputs: data.inputs ? data.inputs : [],
         mamAddress: "",
         nextRootAddress: ""
     };
     
     if (lightweight) {
-        (pkg as ILightweightPackage).data = value;
+        (pkg as ILightweightPackage).data = data.value;
     } else {
         (pkg as IStandardPackage).signature = crypto.createHash("sha256")
-            .update(`${pkg.dataPackageId} ${value} ${pkg.timestamp}`)
+            .update(`${pkg.dataPackageId} ${data.value} ${pkg.timestamp}`)
             .digest("hex");
     }
     delete pkg.mamAddress;
@@ -63,26 +69,24 @@ async function writeData(seed: string, value: any, lightweight: boolean, inputs:
 /**
  * api for add package
  */
-routerApi.post("/lightweight/:seed/:value",
+routerApi.post("/lightweight/:seed/",
         async (req, res) => {
             const seed = req.params["seed"];
-            const value = req.params["value"];
-            if (!seed || !value) {
+            if (!seed) {
                 res.end(400);
                 return;
             }
-
-            res.json(await writeData(seed, value, true, req.body));
+            
+            res.json(await writeData(seed, req.body, true));
         })
-    .post("/standard/:seed/:value",
+    .post("/standard/:seed/",
         async (req, res) => {
             const seed = req.params["seed"];
-            const value = req.params["value"];
-            if (!seed || !value) {
+            if (!seed) {
                 res.end(400);
                 return;
             }
-            res.json(await writeData(seed, value, false, req.body));
+            res.json(await writeData(seed, req.body, false));
         });
 
 export {routerUI, routerApi};

@@ -1,4 +1,5 @@
 ﻿import * as React from "react";
+import uuid = require("uuid/v4");
 import { SeedInput } from "./seed-input";
 import { LogOutput } from "./log-output";
 import { ChannelPackagesList } from "./channel-packages-list";
@@ -24,7 +25,7 @@ class State {
     }
 
     seed: string | undefined;
-    value = 0;
+    value: any = "";
     packageType: "lightweight" | "standard" = lightweight;
     log: string[] = [];
     packageInputsAddress: string[] = [];
@@ -52,18 +53,23 @@ export class Publisher extends React.Component<IProp, State> {
         if (!this.state.value) {
             return;
         }
-        this.log(`submitting package with value ${this.state.value}`);
+        const pkgId = uuid();
+        this.log(`submitting package ${pkgId}`);
         this.setState({ isSubmitting: true });
         try {
-            const pkg = await $.ajax(`/api/simulate/${this.state.packageType}/${this.state.seed}/${this.state.value}`,
+            const pkg = await $.ajax(`/api/simulate/${this.state.packageType}/${this.state.seed}`,
                 {
                     method: "POST",
-                    data: JSON.stringify(this.state.packageInputsAddress),
+                    data: JSON.stringify({
+                        inputs: this.state.packageInputsAddress,
+                        value: this.state.value,
+                        dataPackageId: pkgId
+                    }),
                     contentType: "application/json",
                     dataType: "json"
                 });
             if (pkg) {
-                this.setState({ value: 0, packageInputsAddress: [] });
+                this.setState({ value: "", packageInputsAddress: [] });
                 this.log(`package ${JSON.stringify(pkg)} is submitted.`);
             } else {
                 this.log(`package submitte failed.`);
