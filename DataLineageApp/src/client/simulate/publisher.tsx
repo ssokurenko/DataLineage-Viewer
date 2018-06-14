@@ -28,6 +28,7 @@ class State {
     packageType: "lightweight" | "standard" = lightweight;
     log: string[] = [];
     packageInputsAddress: string[] = [];
+    isSubmitting: boolean = false;
 }
 
 export class Publisher extends React.Component<IProp, State> {
@@ -52,20 +53,25 @@ export class Publisher extends React.Component<IProp, State> {
             return;
         }
         this.log(`submitting package with value ${this.state.value}`);
-
-        const pkg = await $.ajax(`/api/simulate/${this.state.packageType}/${this.state.seed}/${this.state.value}`,
-            {
-                method: "POST",
-                data: JSON.stringify(this.state.packageInputsAddress),
-                contentType: "application/json",
-                dataType: "json"
-            });
-        if (pkg) {
-            this.setState({ value: 0, packageInputsAddress: [] });
-            this.log(`package ${JSON.stringify(pkg)} is submitted.`);
-        } else {
-            this.log(`package submitte failed.`);
-        }
+        this.setState({ isSubmitting: true });
+        try {
+            const pkg = await $.ajax(`/api/simulate/${this.state.packageType}/${this.state.seed}/${this.state.value}`,
+                {
+                    method: "POST",
+                    data: JSON.stringify(this.state.packageInputsAddress),
+                    contentType: "application/json",
+                    dataType: "json"
+                });
+            if (pkg) {
+                this.setState({ value: 0, packageInputsAddress: [] });
+                this.log(`package ${JSON.stringify(pkg)} is submitted.`);
+            } else {
+                this.log(`package submitte failed.`);
+            }
+        } catch (e) {
+            this.log(`package submitte failed with error ${JSON.stringify(e)}.`);
+        } 
+        this.setState({ isSubmitting: false });
         event.preventDefault();
     }
 
@@ -125,7 +131,9 @@ export class Publisher extends React.Component<IProp, State> {
 
                        <div className="form-group row">
                            <div className="col-sm-10">
-                               <button type="button" className="btn btn-primary mb-2" onClick={this.onAddClick.bind(this)}>Add</button>
+                               <button type="button" className="btn btn-primary mb-2" onClick={this.onAddClick.bind(this)}>Add
+                                   {this.state.isSubmitting && <i className="fas fa-sync-alt fa-spin" />}
+                               </button>
                            </div>
                        </div></div>
                </div>;
