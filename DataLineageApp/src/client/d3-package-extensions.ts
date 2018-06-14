@@ -7,7 +7,7 @@ export function packageDescriptionHtml(pkg: IDataPackage | ILightweightPackage |
     let listContent = "";
     if (pkg) {
         for (let f in pkg) {
-            if (pkg.hasOwnProperty(f)) {
+            if (pkg.hasOwnProperty(f) && f !=="nextRootAddress") {
                 listContent += `<li class="list-group-item">${f}: ${pkg[f]}</li>`;
             }
         }
@@ -41,6 +41,7 @@ class DrawConfig {
                         timestamp: Date.now(),
                         dataPackageId: "temp-data-package-id",
                         mamAddress: "empty-address",
+                        nextRootAddress: "",
                         inputs: []
                     }),
                     () => "#ffffff",

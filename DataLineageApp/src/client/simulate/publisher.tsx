@@ -52,9 +52,16 @@ export class Publisher extends React.Component<IProp, State> {
             return;
         }
         this.log(`submitting package with value ${this.state.value}`);
-        const pkg = await $.post(`/api/simulate/${this.state.packageType}/${this.state.seed}/${this.state.value}`);
+
+        const pkg = await $.ajax(`/api/simulate/${this.state.packageType}/${this.state.seed}/${this.state.value}`,
+            {
+                method: "POST",
+                data: JSON.stringify(this.state.packageInputsAddress),
+                contentType: "application/json",
+                dataType: "json"
+            });
         if (pkg) {
-            this.setState({ value: 0 });
+            this.setState({ value: 0, packageInputsAddress: [] });
             this.log(`package ${JSON.stringify(pkg)} is submitted.`);
         } else {
             this.log(`package submitte failed.`);
@@ -86,50 +93,52 @@ export class Publisher extends React.Component<IProp, State> {
     }
 
     private renderValueInput() {
-        return <div>
-                   <div className="form-group row">
-                       <label htmlFor="valueInput" className="col-sm-2 col-form-label">Value</label>
-                       <div className="col-sm-10">
-                           <div className="input-group">
-                               <div className="input-group-prepend">
-                                   <div className="input-group-text"><i className="fas fa-code-branch"></i></div>
-                               </div>
-                               <input value={this.state.value} onChange={this.onValueChange.bind(this)} type="number" className="form-control" id="valueInput" placeholder="Input the new value"/>
-                           </div>
-                       </div>
-                   </div>
-
-                   <fieldset className="form-group">
-                       <div className="row">
-                           <legend className="col-form-label col-sm-2 pt-0">Protocol type</legend>
+        return <div className="row">
+                   <div className="col-sm-12">
+                       <div className="form-group row">
+                           <label htmlFor="valueInput" className="col-sm-2 col-form-label">Value</label>
                            <div className="col-sm-10">
-                               <div className="form-check">
-                                   <input onChange={this.onPackageTypeChanged.bind(this)} className="form-check-input" type="radio" name="packageType" id="packageTypeSimpleInput" value={lightweight} checked={this.state.packageType === lightweight}/>
-                                   <label className="form-check-label" htmlFor="packageTypeSimpleInput">{`${lightweight
-                                       } protocol`}</label>
+                               <div className="input-group">
+                                   <div className="input-group-prepend">
+                                       <div className="input-group-text"><i className="fas fa-code-branch"></i></div>
+                                   </div>
+                                   <input value={this.state.value} onChange={this.onValueChange.bind(this)} type="number" className="form-control" id="valueInput" placeholder="Input the new value"/>
                                </div>
-                               <div className="form-check">
-                                   <input onChange={this.onPackageTypeChanged.bind(this)} className="form-check-input" type="radio" name="packageType" id="packageTypeStandardInput" value={standard} checked={this.state.packageType === standard}/>
-                                   <label className="form-check-label" htmlFor="packageTypeStandardInput">{`${standard
-                                       } protocol`}</label>
-                               </div>
-
                            </div>
                        </div>
-                   </fieldset>
 
-                   <div className="form-group row">
-                       <div className="col-sm-10">
-                           <button type="button" className="btn btn-primary mb-2" onClick={this.onAddClick.bind(this)}>Add</button>
-                       </div>
-                   </div>
+                       <fieldset className="form-group">
+                           <div className="row">
+                               <legend className="col-form-label col-sm-2 pt-0">Protocol type</legend>
+                               <div className="col-sm-10">
+                                   <div className="form-check">
+                                       <input onChange={this.onPackageTypeChanged.bind(this)} className="form-check-input" type="radio" name="packageType" id="packageTypeSimpleInput" value={lightweight} checked={this.state.packageType === lightweight}/>
+                                       <label className="form-check-label" htmlFor="packageTypeSimpleInput">{`${lightweight} protocol`}</label>
+                                   </div>
+                                   <div className="form-check">
+                                       <input onChange={this.onPackageTypeChanged.bind(this)} className="form-check-input" type="radio" name="packageType" id="packageTypeStandardInput" value={standard} checked={this.state.packageType === standard}/>
+                                       <label className="form-check-label" htmlFor="packageTypeStandardInput">{`${standard} protocol`}</label>
+                                   </div>
+                               </div>
+                           </div>
+                       </fieldset>
+
+                       <div className="form-group row">
+                           <div className="col-sm-10">
+                               <button type="button" className="btn btn-primary mb-2" onClick={this.onAddClick.bind(this)}>Add</button>
+                           </div>
+                       </div></div>
                </div>;
     }
 
     private renderChannelPackages() {
         return <div className="row">
-            {this.props.inputsAddress && this.props.inputsAddress.map(a => <ChannelPackagesList key={a} rootAddress={a} selectedInputsAddress={this.state.packageInputsAddress} onPackageSelected={this.onPackageSelectedAsInput.bind(this)}/>)}
-        </div>;
+                   <div className="col-sm-12">
+                       {this.props.inputsAddress &&
+                           this.props.inputsAddress.map(a =>
+                               <ChannelPackagesList key={a} rootAddress={a} selectedInputsAddress={this.state.packageInputsAddress} onPackageSelected={this.onPackageSelectedAsInput.bind(this)}/>)}
+                   </div>
+               </div>;
     }
 
     render() {

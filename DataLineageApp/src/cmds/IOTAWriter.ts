@@ -51,10 +51,10 @@ export default class IOTAWriter {
     }
 
     /**
-     * @returns if success, renturn the address of the package, otherwise return undefined
+     * @returns if success, renturn the address of the package and the next root address in the same channel, otherwise return undefined
      * @param newPackage
      */
-    public async attachNew(newPackage): Promise<string | undefined> {
+    public async attachNew(newPackage): Promise<{ address: string; nextRoot: string } | undefined> {
         try {
             await this.initLastMamState();
         } catch (e) {
@@ -75,7 +75,7 @@ export default class IOTAWriter {
             // update mamState as new mamState
             this._lastMamState = message.state;
             console.log(`package ${json} is submitted, the address is ${message.address}`);
-            return message.address;
+            return { address: message.address, nextRoot: message.state.channel.next_root };
         } catch (e) {
             console.error(`submitting package ${json} failed, the error is ${e}`);
             return undefined;
