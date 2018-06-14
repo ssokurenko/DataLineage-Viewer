@@ -44,7 +44,8 @@ export class InputChannelSelector extends React.Component<IProp, State> {
     }
 
     render() {
-        return <div>
+        return <React.Fragment>
+            <p className="h4">Add input channels:</p>
             <div className="form-group row">
                 <div className="col-auto">
                     <button type="button" className="btn btn-primary mb-2" onClick={this.onAddClicked.bind(this)}>Add</button>
@@ -54,6 +55,6 @@ export class InputChannelSelector extends React.Component<IProp, State> {
                 </div>
             </div>
             {this.state.inputsAddress.map((a,i)=>this.renderOnePublisherInput(i, a))}
-        </div>;
+        </React.Fragment>;
     }
 }

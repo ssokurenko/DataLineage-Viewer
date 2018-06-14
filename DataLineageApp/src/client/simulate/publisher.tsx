@@ -13,6 +13,7 @@ export interface IProp {
      * The root address of the channel, which packages will be used to be selected as a input for current new package
      */
     inputsAddress: string[];
+    inputsConfirmed?: boolean;
     seed?: string;
     onSeedConfirmed?(seed: string);
 }
@@ -158,12 +159,16 @@ export class Publisher extends React.Component<IProp, State> {
     render() {
         return <React.Fragment>
                    <SeedInput seed={this.state.seed} onSeedConfirmed={this.confirmeSeed.bind(this)}/>
-                   {this.renderChannelPackages()}
-                   {this.state.seed && this.renderValueInput()}
-                   <div className="row">
-                       <div className="col-sm-12">
-                           <LogOutput log={this.state.log}/></div>
-                   </div>
+                   {(typeof (this.props.inputsConfirmed) === "undefined" || this.props.inputsConfirmed) &&
+                       <React.Fragment>
+                           {this.renderChannelPackages()}
+                           {this.state.seed && this.renderValueInput()}
+                           <div className="row">
+                               <div className="col-sm-12">
+                                   <LogOutput log={this.state.log}/>
+                               </div>
+                           </div>
+                       </React.Fragment> }
                </React.Fragment>;
     }
 }
