@@ -5,14 +5,6 @@ import { drawConfig, packageDescriptionHtml } from "./d3-package-extensions";
 import { IDataPackage } from "../server/data-package";
 import { PacakgesCollection } from "./packages-collection";
 
-interface INodeData extends d3.SimulationNodeDatum {
-    package: IDataPackage;
-}
-
-interface ILinkData extends d3.SimulationLinkDatum<INodeData> {
-
-}
-
 interface IPackageTreeData {
     name: string;
     data: IDataPackage;
@@ -67,140 +59,21 @@ class App {
         return nsvg ? nsvg.getBoundingClientRect().height : 0;
     }
 
-    get nodesSelection(): d3.Selection<HTMLElement, INodeData, HTMLElement, INodeData> {
-        return this._svg.selectAllNodes();
-    }
-
-    get linkssSelection(): d3.Selection<HTMLElement, ILinkData, HTMLElement, ILinkData> {
-        return this._svg.selectAllLinks();
-    }
-
-    private onSimulationTicked(): void {
-        this._svg.nodesOnSimulationTicked();
-        this._svg.linkssOnSimulationTicked();
-    }
-
-    private onSimulationEnd(): void {
-        let maxY: number = 0;
-        this._nodesData.forEach(d => {
-            if (d.y && d.y > maxY) {
-                maxY = d.y;
-            }
-        });
-        $(`#${mainGraphSvgId}`).height(maxY + 40);
-    }
-
     /**
      * 
      * @param data
      * @param index, accroding to d3js, index is fixed when listern registered, so don't use it
      * @param nodes
      */
-    private onNodeClicked(data: INodeData, index, nodes): void {
-        if (data.package && data.package.inputs) {
-            data.package.inputs.forEach(address => this.update(address, false));
+    private onNodeClicked(data: d3.HierarchyPointNode<IPackageTreeData>, index, nodes): void {
+        const pkg = data.data.data;
+        //expand the node
+        if (pkg && pkg.inputs) {
+            pkg.inputs.forEach(address => this.update(address, false));
         }
-        $(`#${pkgInfoContainerDivId}`).empty().append(packageDescriptionHtml(data.package));
-    }
-
-    /*
-     * update d3js nodes elements based on the latest _nodesData
-     */
-    private updateD3Nodes(): void {
-        this._simulation.nodes(this._nodesData);
-        const nodesSelection = this.nodesSelection.data(this._nodesData);
-        //as we only add new packages onto the graph, no pacakges remove or update, so needn't take care about the remove and update
-        //and before reomve the element from dom, tooltip must be hidden
-        nodesSelection.exit()
-            //.removePopover()
-            .remove();
-
-        //for new package node, we create cirele and set class as .node and other attributes
-        nodesSelection.enter()
-            .packageNode<INodeData>(d => d.package,
-                d => this._packages.pacakgeColor(d.package.mamAddress),
-                undefined /*d => d.package.inputs ? d.package.inputs.map(address => this._packages.pacakgeColor(address)) : []*/)
-            //.popover((d: INodeData) => d.package) if enable popover, the removePopover should be enabled also
-            .on("click", this.onNodeClicked.bind(this));
-        //.merge(nodesSelection)
-    }
-
-    /*
-     * update d3js links data and links elements based on the latest _nodesData
-     */
-    private updateD3Links(): void {
-        const f = this._simulation.force(ForceNames.Link) as d3.ForceLink<INodeData, ILinkData>;
-        f.links(this._linksData);
-        const linksSelection = this.linkssSelection.data(this._linksData);
-        linksSelection.enter().packageLink();
-    }
-
-    private addOnePackage(p: IDataPackage | undefined): void {
-        //check again to make usre no duplicated nodes added
-        if (!p || this._packages.packageExist(p.mamAddress)) return;
-        this._packages.addOrUpdate(p);
-        if (p.inputs) {
-            //we add inputs as a fake package to get them colors
-            p.inputs.forEach(address => this._packages.addOrUpdate({ mamAddress: address } as any));
-
-            //there is a possibility that one of this node's input already added before this node is added, so at the time the input node is added,
-            //as this node hasn't been added, so the link from that input node to this node won't be added, so we need to check and add all missing links
-            p.inputs
-                //find missing address from the p.inputs
-                .filter(address => {
-                    if (!this._packages.packageExist(address, true)) return false;
-                    //the input pkg exist, so check if the link is missing
-                    //if not exit, then we should renturn true to make the link add to "missingLinks"
-                    return this._linksData.filter(l => l.source === address && l.target === p.mamAddress).length <= 0;
-                })
-                //create the link for missing address
-                .map(missingInputAddress => ({
-                    source: missingInputAddress,
-                    target: p.mamAddress
-                }))
-                //add links to linkdata
-                .forEach(l => this._linksData.push(l));
-        }
-        const nodeData: INodeData = {
-            package: p
-        };
-        const directInputNodes = this._packages.getInputTo(p.mamAddress)
-            .map(pkg => this._nodesData.filter(n => n.package.mamAddress === pkg.mamAddress)[0]);
-        if (p.mamAddress === this._rootPkgAddress) {
-            nodeData.fx = this.width / 2;
-            nodeData.fy = drawConfig.nodeRadius * 4;
-        } else {
-            if (directInputNodes.length > 0) {
-                nodeData.x = (directInputNodes[0].x as number) +
-                    (Math.random() * 2 * drawConfig.nodeRadius - drawConfig.nodeRadius);
-                nodeData.y = (directInputNodes[0].y as number) + drawConfig.nodeRadius * 3;
-            }
-        }
-        this._nodesData.push(nodeData);
-        //as this node is a new added node, so we will add all links that this pacakge as a input
-        directInputNodes.map((n: INodeData) => ({
-            source: p.mamAddress as string,
-            target: n.package.mamAddress
-        })).forEach(l => this._linksData.push(l));
-
-        //must draw nodes first, then draw links, so that links and arrow can on top of nodes
-        this.updateD3Links();
-        this.updateD3Nodes();
-        this._simulation.restart();
-    }
-
-    /**
-     * for each package node to check if all the inputs are all loaded on svg, if so , hide the expand "+"
-     */
-    private checkAndUpdateNodeExpandStatus() {
-        this.nodesSelection.each((data, index, nodes) => {
-            //for no input package, they already no expand plus chart, so needn't do anything
-            if (!data.package.inputs || data.package.inputs.length <= 0) return;
-            //all inputs are exist, so we think this pacakge is alread expanded
-            if (data.package.inputs.filter(address => !this._packages.packageExist(address, true)).length <= 0) {
-                d3.select(nodes[index]).packageExpanded();
-            }
-        });
+        //remove the +
+        d3.select(nodes[index]).selectAll(`text.${drawConfig.plusTxtCssClass}`).attr("class", `${drawConfig.plusTxtCssClass} ${drawConfig.plusExpandedCssClass}`);
+        $(`#${pkgInfoContainerDivId}`).empty().append(packageDescriptionHtml(pkg));
     }
 
     private toTreeData(pkg: IDataPackage | undefined): IPackageTreeData | undefined {
@@ -227,6 +100,56 @@ class App {
         const root = this._packages.getPackage(this._rootPkgAddress);
         if (!root) return;
         this._nodesData = d3.hierarchy(this.toTreeData(root) as IPackageTreeData);
+        const nodes = this._treemap(this._nodesData);
+        const g = this._svg.select("g");
+
+        // adds the links between the nodes
+        const link = g.selectAll(".link.tree")
+            .data(nodes.descendants().slice(1))
+            .enter().append("path")
+            .attr("class", "link tree")
+            //.attr("marker-end", "url(#arrow)")
+            .attr("d", d => {
+                const px = d.parent ? d.parent.x : 0;
+                const py = d.parent ? d.parent.y : 0;
+                return "M" + d.x + "," + d.y
+                + "C" + d.x + "," + (d.y + py) / 2
+                + " " + px + "," + (d.y + py) / 2
+                    + " " + px + "," + py
+            });
+
+        // adds each node as a group, node is g collection
+        const node = g.selectAll(".node")
+            .data(nodes.descendants())
+            .enter().append("g")
+            .attr("class", d => `node tree${d.children ? " node--internal" : " node--leaf"}`)
+            .attr("transform", d => `translate(${d.x},${d.y})`)
+            .on("click", this.onNodeClicked.bind(this));
+            
+
+        // adds the circle to the node
+        node.append("circle")
+            .attr("class", "package")
+            .attr("fill", d => this._packages.pacakgeColor(d.data.data.mamAddress) as string);
+
+        /*
+        node.each((d, index: number, nodes: Element[]) => {
+            const n = nodes[index];
+            const pkg = d.data.data;
+            const text = (pkg.inputs && pkg.inputs.length > 0) ? "+" : "";
+            const txtElement = d3.select(n).append("text")
+                .text(text).attr("class", drawConfig.plusTxtCssClass);
+            //.attr("fill", color); css will do
+            const rect: SVGRect = (txtElement.node() as any).getBBox();
+            txtElement.attr("dy", (rect.height / 2) - 12).attr("dx", -(rect.width / 2));
+        });*/
+
+        // adds the text to the node
+        //node.append("text")
+        //    .attr("dy", ".35em")
+        //    .attr("y", d => d.children ? -20 : 20)
+        //    .style("text-anchor", "middle")
+        //    .text(d => d.data.name);
     }
 
     /**
@@ -252,8 +175,11 @@ class App {
     reset(): void {
         this.close();
         const $svg = $(this.svgSelector);
-        this._treemap = d3.tree().size([$svg.width() as number, 500]);
-        
+        this._treemap = d3.tree<IPackageTreeData>().size([$svg.width() as number, 500]);
+        /*
+         * Define arraw marker
+         */
+        //this._svg.defs();
         this._svg//.attr("width", 500)
             .attr("height", 500)
             .append("g")

@@ -82,7 +82,7 @@ cfg({
         "clientApp": {
             "deps": ["bootstrap", "d3js"],
             "urls": [
-                "client-app.js"
+                "client-app-tree.js"
             ]
         },
     }
