@@ -52,8 +52,9 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
     if (!address) {
         return null;
     }
-    const cached = packageCache.get(address);
-    if (cached) {
+    const cached = packageCache.get<IDataPackage>(address);
+    //for old cache, there is no nextRootAddress, so we need to check this and update them
+    if (cached && cached.nextRootAddress) {
         return cached;
     }
     const allApiCalls = config.iotaProviders.map(async (p) => {
@@ -61,13 +62,16 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
         const mamState = Mam.init(iota);
         //ToDo: if fetchSingle get exception, what will happen
         const mamResult: { payload: string, nextRoot: string } = await Mam.fetchSingle(address, "public", null);
-        return iota.utils.fromTrytes(mamResult.payload);
+        return {
+            json: iota.utils.fromTrytes(mamResult.payload),
+            nextRootAddress: mamResult.nextRoot
+        };
     });
 
     try {
-        const firstFoundJson = await waitAny(allApiCalls);
-        if (firstFoundJson) {
-            const found: IDataPackage = { ...JSON.parse(firstFoundJson), mamAddress: address } as IDataPackage;
+        const firstFound = await waitAny(allApiCalls);
+        if (firstFound) {
+            const found: IDataPackage = { ...JSON.parse(firstFound.json), mamAddress: address, nextRootAddress: firstFound.nextRootAddress } as IDataPackage;
             packageCache.set(address, found);
             return found;
         }
@@ -80,30 +84,55 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
     }
 }
 
-/* GET package information by address api
+
+router
+/*
+ * Get all packages in the channel
+ */
+    .get("/channel/:rootAddress", async (req, res) => {
+        const allPacakges: IDataPackage[] = [];
+        let rootAddress = req.params["rootAddress"];
+        if (!rootAddress) {
+            res.end(400);
+            return;
+        }
+        while (true) {
+            let pkg = await fetchPacakgeInfoWithCache(rootAddress);
+            if (!pkg) {
+                break;
+            }
+            rootAddress = pkg.nextRootAddress;
+            allPacakges.push(pkg);
+            if (!rootAddress) {
+                break;
+            }
+        }
+        res.json(allPacakges);
+    })
+ /* GET package information by address api
  supported urls:
  api/address/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY         -> only get this pacakge inforamtion
  api/address/OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY/all     -> get pcakge and all it's inputs recursively
  */
-router.get("/:address/:all?", async (req, res) => {
-    const allPacakges: IDataPackage[] = [];
-    const fetchAddresses: string[] = [];
-    let address = req.params["address"];
-    if (address) {
-        fetchAddresses.push(address);
-    }
-    while (fetchAddresses.length > 0) {
-        address = fetchAddresses.shift();
-        const pkg = await fetchPacakgeInfoWithCache(address);
-        if (pkg) {
-            allPacakges.push(pkg);
-            if (req.params.all && pkg.inputs && pkg.inputs.length > 0) {
-                pkg.inputs.forEach(a => fetchAddresses.push(a));
+    .get("/:address/:all?", async (req, res) => {
+        const allPacakges: IDataPackage[] = [];
+        const fetchAddresses: string[] = [];
+        let address = req.params["address"];
+        if (address) {
+            fetchAddresses.push(address);
+        }
+        while (fetchAddresses.length > 0) {
+            address = fetchAddresses.shift();
+            let pkg = await fetchPacakgeInfoWithCache(address);
+            if (pkg) {
+                allPacakges.push(pkg);
+                if (req.params.all && pkg.inputs && pkg.inputs.length > 0) {
+                    pkg.inputs.forEach(a => fetchAddresses.push(a));
+                }
             }
         }
-    }
-    
-    res.json(allPacakges);
-});
+
+        res.json(allPacakges);
+    });
 
 export default router;

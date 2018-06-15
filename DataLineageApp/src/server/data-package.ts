@@ -8,6 +8,10 @@
      * mam address of the package
      */
     mamAddress: string;
+    /**
+     * Next root address in the same channel
+     */
+    nextRootAddress: string;
     /*
      * The address of MAM for each input of the data package
      */

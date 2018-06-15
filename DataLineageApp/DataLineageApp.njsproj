@@ -11,7 +11,7 @@
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
     <ToolsVersionPromptShown>0.0</ToolsVersionPromptShown>
     <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
-    <ScriptArguments>-simulate</ScriptArguments>
+    <ScriptArguments>-simulate -seed RRDLJYUQNVKAUGRETARNIILGFILLQFTQPHUYQBUY9LGTUSWMEXAAPPOU9RSYLJHTHQGSEPVBVD9TH9VFV</ScriptArguments>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -66,6 +66,10 @@
     <Content Include="src\server\views\error.pug" />
     <Content Include="src\server\views\index.pug" />
     <Content Include="src\server\views\layout.pug" />
+    <Content Include="src\server\views\simulate-processor.pug" />
+    <Content Include="src\server\views\simulate-publisher.pug">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="src\tsconfig.base.json">
       <SubType>Code</SubType>
     </Content>
@@ -74,7 +78,9 @@
   <ItemGroup>
     <Folder Include="src\" />
     <Folder Include="src\client\" />
+    <Folder Include="src\client\simulate\" />
     <Folder Include="src\cmds\" />
+    <Folder Include="src\common\" />
     <Folder Include="src\server\" />
     <Folder Include="src\server\public\" />
     <Folder Include="src\server\public\javascripts\" />
@@ -91,11 +97,33 @@
     <TypeScriptCompile Include="src\client\d3-package-extensions.ts" />
     <TypeScriptCompile Include="src\client\d3.extensions.d.ts" />
     <TypeScriptCompile Include="src\client\packages-collection.ts" />
+    <TypeScriptCompile Include="src\client\simulate\channel-packages-list.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\client\simulate\log-output.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\client\simulate\processor-app.tsx" />
+    <TypeScriptCompile Include="src\client\simulate\publisher-app.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\client\simulate\publisher.tsx" />
+    <TypeScriptCompile Include="src\client\simulate\input-channel-selector.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\client\simulate\seed-input.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\cmds\IOTAWriter.ts" />
     <TypeScriptCompile Include="src\cmds\mam-cmd.ts" />
     <TypeScriptCompile Include="src\cmds\simulate.ts" />
+    <TypeScriptCompile Include="src\common\utilities.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\server\data-package.ts" />
     <TypeScriptCompile Include="src\server\package-cache.ts" />
     <TypeScriptCompile Include="src\server\routes\address.ts" />
+    <TypeScriptCompile Include="src\server\routes\simulate.ts" />
     <TypeScriptCompile Include="src\server\server-app.ts" />
     <TypeScriptCompile Include="src\server\server-config.ts">
       <SubType>Code</SubType>

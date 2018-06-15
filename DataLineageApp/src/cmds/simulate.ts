@@ -1,28 +1,29 @@
 ﻿import readline = require("readline");
 import fs = require("fs");
-import * as crypto from "crypto";
 import {IDataPackage, PacakgeHelper } from "../server/data-package";
 import { PacakgesCollection } from "../client/packages-collection";
 import config from "../server/server-config";
-import IOTA = require("iota.lib.js");
-import * as Mam from "../server/mam.node.js";
+import IOTAWriter from "./IOTAWriter";
 
 interface ISubmitIDataPackage extends IDataPackage {
     isSubmitted?: boolean;
 }
 
-interface IBlockChainProvider {
-    /**
-     * @returns if success, renturn the address of the package, otherwise return undefined
-     * @param package
-     */
-    (p: ISubmitIDataPackage): Promise<string | undefined>;
-}
-
-
 export default class Simulate {
+    private _iotaWriter: IOTAWriter;
+
     run(args: string[]) {
         console.log("Start simulate mam data tool...");
+        const seedParamIndex = args.indexOf("-seed");
+        let seed: string | undefined;
+        if (seedParamIndex >= 0) {
+            seed = args[seedParamIndex + 1];
+            console.log("seed provided from arguments");
+        } else {
+            seed = undefined;
+        }
+        this._iotaWriter = new IOTAWriter(config.iotaProviders[0], seed);
+
         let stream: NodeJS.ReadableStream;
         
         const fileParamIndex = args.indexOf("--file");
@@ -38,8 +39,10 @@ export default class Simulate {
             input: stream,
             output: process.stdout
         });
+
         this.inputDataPacakges(rl);
     }
+
 
     /**
      * check if the package read from console or file is valid or not
@@ -85,7 +88,7 @@ export default class Simulate {
 
                 if (line.toLowerCase() === "submit") {
                     finished = true;
-                    Simulate.processAllPackages(pkgs).then(success => {
+                    this.processAllPackages(pkgs).then(success => {
                         if (success) {
                             console.log("All packages are processed");
                         } else {
@@ -110,15 +113,13 @@ export default class Simulate {
             .on("close", () => {});
     }
 
-    private static async processAllPackages(pkgs: PacakgesCollection<ISubmitIDataPackage>): Promise<boolean> {
+    private async processAllPackages(pkgs: PacakgesCollection<ISubmitIDataPackage>): Promise<boolean> {
         if (pkgs.getPackagesCount() <= 0) {
             console.warn("No packages provided, exit");
             return false;
         }
         config.useProxyIfConfigured();
-        const provider = Simulate.getBlockchainProvider();
-        if (!provider) return false;
-
+        
         while (true) {
             let leafNodes = Simulate.findLeafNodes(pkgs);
             if (leafNodes.length <= 0 && pkgs.getAllPackages().filter(p => !p.isSubmitted).length > 0) {
@@ -130,7 +131,7 @@ export default class Simulate {
             if (leafNodes.length <= 0) return true; //all done
             for (let i = 0; i < leafNodes.length; i++) {
                 const p = leafNodes[i];
-                if (!await Simulate.submitPackages(provider, pkgs, p)) {
+                if (!await this.submitPackages(pkgs, p)) {
                     return false;
                 }
             }
@@ -180,54 +181,17 @@ export default class Simulate {
         return result;
     }
 
-    private static keyGen(length:number): string {
-        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ9";
-        const values = crypto.randomBytes(length);
-        const result = new Array(length);
-        for (let i = 0; i < length; i++) {
-            result[i] = charset[values[i] % charset.length];
+    /**
+     * @returns if success, renturn the address of the package, otherwise return undefined
+     * @param p
+     */
+    private async attachNew(p: ISubmitIDataPackage): Promise<string | undefined> {
+        const copied: ISubmitIDataPackage = { ...p };
+        if (typeof copied.isSubmitted !== "undefined") {
+            delete copied.isSubmitted;
         }
-        return result.join("");
-    }
-
-    private static getBlockchainProvider(): IBlockChainProvider|undefined {
-        if (!config.iotaProviders || config.iotaProviders.length <= 0) {
-            console.error("IOTA nodes are not configured, please config it in 'server-config.js'");
-            return undefined;
-        }
-        console.log(`using ${config.iotaProviders[0]} as the node.`);
-        const iota = new IOTA({ provider: config.iotaProviders[0] });
-        let mamState = Mam.init(iota, Simulate.keyGen(81));
-
-        /**
-         * @returns the submitted data address
-         */
-        async function submit(p: ISubmitIDataPackage): Promise<string | undefined> {
-            console.log(`submitting package ${p.dataPackageId} ...`);
-            const copied: ISubmitIDataPackage = { ...p };
-            if (typeof copied.isSubmitted !== "undefined") {
-                delete copied.isSubmitted;
-            }
-            delete copied.mamAddress;
-            // Create Trytes
-            const trytes = iota.utils.toTrytes(JSON.stringify(copied));
-            // Get MAM payload
-            const message = Mam.create(mamState, trytes);
-            try {
-                // Attach the payload.
-                await Mam.attach(message.payload, message.address);
-                // update mamState as new mamState
-                mamState = message.state;
-                p.isSubmitted = true;
-                console.log(`package ${p.dataPackageId} is submitted, the address is ${message.address}`);
-                return message.address;
-            } catch (e) {
-                console.error(`submitting package ${p.dataPackageId} failed, the error is ${e}`);
-                return undefined;
-            }
-        }
-        
-        return submit;
+        delete copied.mamAddress;
+        return await this._iotaWriter.attachNew(copied);
     }
 
     /**
@@ -235,11 +199,11 @@ export default class Simulate {
      * @param pkgs
      * @param current, the node that will be submitted to IOTA
      */
-    private static async submitPackages(provider: IBlockChainProvider, pkgs: PacakgesCollection<ISubmitIDataPackage>, current: ISubmitIDataPackage): Promise<boolean> {
+    private async submitPackages(pkgs: PacakgesCollection<ISubmitIDataPackage>, current: ISubmitIDataPackage): Promise<boolean> {
         if (current.isSubmitted) {
             return true;
         }
-        const address = await provider(current);
+        const address = await this.attachNew(current);
         if (!address) {
             return false;
         }
