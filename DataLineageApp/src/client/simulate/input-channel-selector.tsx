@@ -6,6 +6,7 @@ export interface IProp {
 
 class State {
     inputsAddress: string[] = [];
+    hasError = false;
 }
 
 export class InputChannelSelector extends React.Component<IProp, State> {
@@ -15,19 +16,27 @@ export class InputChannelSelector extends React.Component<IProp, State> {
     }
     private onAddressChanged(index: number, event: React.ChangeEvent<HTMLInputElement>) {
         this.setState({
-            inputsAddress: this.state.inputsAddress.map((a, i) => i === index ? event.target.value : a)
+            inputsAddress: this.state.inputsAddress.map((a, i) => i === index ? event.target.value : a),
+            hasError: false
         });
     }
 
     private onAddClicked(event: Event) {
-        this.setState({ inputsAddress: this.state.inputsAddress.concat([""]) });
+        this.setState({ inputsAddress: this.state.inputsAddress.concat([""]), hasError: false });
     }
     private onRemoveClicked(index: number, event: Event) {
-        this.setState({ inputsAddress: this.state.inputsAddress.filter((a, i) => i !== index) });
+        this.setState({ inputsAddress: this.state.inputsAddress.filter((a, i) => i !== index), hasError: false });
     }
 
     private onInputsConfirmClicked(event: Event) {
-        this.props.onInputsConfirmed(this.state.inputsAddress);
+        if (this.state.inputsAddress.filter(a => {
+                if (!a) return false;
+                return a.trim();
+            }).length > 0) {
+            this.props.onInputsConfirmed(this.state.inputsAddress);
+        } else {
+            this.setState({hasError: true});
+        }
     }
 
     private renderOnePublisherInput(index: number, address: string) {
@@ -46,12 +55,15 @@ export class InputChannelSelector extends React.Component<IProp, State> {
     render() {
         return <React.Fragment>
             <p className="h4">Add input channels:</p>
+            {this.state.hasError && <div className="alert alert-warning" role="alert">
+                                        Need one channel address at least.
+                                    </div>}
             <div className="form-group row">
                 <div className="col-auto">
-                    <button type="button" className="btn btn-primary mb-2" onClick={this.onAddClicked.bind(this)}>Add</button>
+                    <button type="button" className="btn btn-primary" onClick={this.onAddClicked.bind(this)}>Add Channel</button>
                 </div>
                 <div className="col-auto">
-                    <button type="button" className="btn btn-success mb-2" onClick={this.onInputsConfirmClicked.bind(this)}>OK</button>
+                    <button type="button" className="btn btn-success" onClick={this.onInputsConfirmClicked.bind(this)}>OK</button>
                 </div>
             </div>
             {this.state.inputsAddress.map((a,i)=>this.renderOnePublisherInput(i, a))}
