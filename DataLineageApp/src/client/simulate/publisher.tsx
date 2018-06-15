@@ -51,7 +51,7 @@ export class Publisher extends React.Component<IProp, State> {
     }
 
     private async onAddClick(event: Event): Promise<void> {
-        if (!this.state.value) {
+        if (typeof(this.state.value) === "undefined" || this.state.value.trim() === "") {
             return;
         }
         const pkgId = uuid();
@@ -83,7 +83,7 @@ export class Publisher extends React.Component<IProp, State> {
     }
 
     private onValueChange(event: React.ChangeEvent<HTMLInputElement>) {
-        this.setState({value: parseFloat(event.target.value)});
+        this.setState({ value: event.target.value});
     }
 
     private onPackageTypeChanged(event: React.ChangeEvent<HTMLInputElement>) {
@@ -115,7 +115,7 @@ export class Publisher extends React.Component<IProp, State> {
                                    <div className="input-group-prepend">
                                        <div className="input-group-text"><i className="fas fa-code-branch"></i></div>
                                    </div>
-                                   <input value={this.state.value} onChange={this.onValueChange.bind(this)} type="number" className="form-control" id="valueInput" placeholder="Input the new value"/>
+                                   <input value={this.state.value} onChange={this.onValueChange.bind(this)} type="text" className="form-control" id="valueInput" placeholder="Input the new value"/>
                                </div>
                            </div>
                        </div>
