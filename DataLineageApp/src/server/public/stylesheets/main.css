@@ -85,6 +85,15 @@ circle.package {
     stroke: #696969;
 }
 
+.link.tree {
+    stroke-width: 2px;
+    fill: none;
+}
+
+.node.tree circle.package {
+    r: 12;
+}
+
 .popover.pacakge-tooltip {
     max-width: 26rem;
 }
