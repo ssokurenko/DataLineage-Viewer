@@ -121,11 +121,16 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="src\server\data-package.ts" />
-    <TypeScriptCompile Include="src\server\package-cache.ts" />
+    <TypeScriptCompile Include="src\server\memory-file-cache.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\server\routes\address.ts" />
     <TypeScriptCompile Include="src\server\routes\simulate.ts" />
     <TypeScriptCompile Include="src\server\server-app.ts" />
     <TypeScriptCompile Include="src\server\server-config.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\server\server-global-cache.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="webpack.config.ts" />

@@ -3,9 +3,7 @@ import IOTA = require("iota.lib.js");
 import * as Mam from "../mam.node.js";
 import config from "../server-config";
 import { IDataPackage } from "../data-package";
-import packageCache from "../package-cache";
-
-packageCache.loadFromFile();
+import { packageCache } from "../server-global-cache";
 
 const router = express.Router();
 
@@ -52,7 +50,7 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
     if (!address) {
         return null;
     }
-    const cached = packageCache.get<IDataPackage>(address);
+    const cached = packageCache.get(address);
     //for old cache, there is no nextRootAddress, so we need to check this and update them
     if (cached && cached.nextRootAddress) {
         return cached;

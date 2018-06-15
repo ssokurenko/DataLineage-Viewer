@@ -5,6 +5,7 @@ import crypto = require("crypto");
 import IOTAWriter from "../../cmds/IOTAWriter";
 import serverConfig from "../server-config";
 import { IDataPackage, ILightweightPackage, IStandardPackage } from "../data-package";
+import { writersCache } from "../server-global-cache";
 const routerUI = express.Router();
 const routerApi = express.Router();
 
@@ -15,12 +16,6 @@ routerUI.get("/publisher", (req, res) => {
 
 routerUI.get("/processor", (req, res) => {
     res.render("simulate-processor", { title: "Simulate - processor" });
-});
-
-
-const writersCache = new NodeCache({
-    stdTTL: 3600 * 24,
-    useClones: false //it's importanted, becasue the writer will update its internal mamstatus to track the last address
 });
 
 interface IPackageSubmitData {

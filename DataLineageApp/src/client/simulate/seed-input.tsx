@@ -55,8 +55,8 @@ export class SeedInput extends React.Component<IProp, State>{
 
     private renderConfirmedMode() {
         return <div className="form-group row">
-                   <label htmlFor="inputPassword6" className="col-sm-1 col-form-label">Seed Value</label>
-                   <div className="col-sm-11">
+                   <label htmlFor="inputPassword6" className="col-sm-2 col-form-label">Seed Value</label>
+                   <div className="col-sm-10">
                        <input value={this.state.seed} type="text" id="seedReadonlyInput" readOnly={true} className="form-control"/>
                    </div>
                </div>;

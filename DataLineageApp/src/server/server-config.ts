@@ -3,6 +3,7 @@
 const config: {
     iotaProviders: string[];
     pacakgeCacheSeconds: number;
+    iotaWriterStateCacheSeconds: number;
     proxy?: { host: string; port: number; },
     useProxyIfConfigured(): void;
 } = {
@@ -13,7 +14,8 @@ const config: {
     /**
      * Determin how long the package information will be keep in memonry cache (in seconds), 0 means not expired.
      */
-    pacakgeCacheSeconds: 3600 * 24,
+    pacakgeCacheSeconds: 3600 * 24 * 2,
+    iotaWriterStateCacheSeconds: 3600 * 24,
     /**
      * Proxy used on server side, as iota nodes can't be accessed or network speed is not stable when being accessed from China, so we have to support proxy on server
      * The api call to iota nodes will go throguh this proxy, if the network from the server to iota is good, then this configraton can be removed, and backend server will access iota directly
