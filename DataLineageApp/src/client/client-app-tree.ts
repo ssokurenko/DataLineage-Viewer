@@ -279,7 +279,7 @@ function getParameterByName(name: string) {
 $(document as any).ready(() => {
     const address = getParameterByName("address");
     const expandAll = getParameterByName("expandAll");
-    if (expandAll == "true"||typeof (expandAll) === undefined||expandAll === "") {
+    if (expandAll == "true"||typeof (expandAll) === undefined||expandAll === ""||expandAll === null) {
         $("#expandAllCheck").attr("checked", "checked");
     } else {
         $("#expandAllCheck").removeAttr("checked");
