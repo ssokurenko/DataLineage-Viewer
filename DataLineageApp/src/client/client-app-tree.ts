@@ -65,14 +65,24 @@ class App {
      * @param index, accroding to d3js, index is fixed when listern registered, so don't use it
      * @param nodes
      */
-    private onNodeClicked(data: d3.HierarchyPointNode<IPackageTreeData>, index, nodes): void {
+    private async onNodeClicked(data: d3.HierarchyPointNode<IPackageTreeData>, index, nodes): Promise<void> {
         const pkg = data.data.data;
         //expand the node
         if (pkg && pkg.inputs) {
-            pkg.inputs.forEach(address => this.update(address, false));
+            const notExists = pkg.inputs.filter(ia => !this._packages.packageExist(ia, true));
+            if (notExists.length > 0) {
+                for (let i = 0; i < notExists.length; i++) {
+                    const newPkgs = await this.fetchPackage(notExists[i], false);
+                    if (newPkgs.length>0) {
+                        this._packages.addOrUpdate(newPkgs[0]);
+                    }
+                }
+            }
+            //ToDo: currently we didn't implement dynamically add new package, so we have to all new pkg data and redraw
+            this.reset();
         }
         //remove the +
-        d3.select(nodes[index]).selectAll(`text.${drawConfig.plusTxtCssClass}`).attr("class", `${drawConfig.plusTxtCssClass} ${drawConfig.plusExpandedCssClass}`);
+        //d3.select(nodes[index]).selectAll(`text.${drawConfig.plusTxtCssClass}`).attr("class", `${drawConfig.plusTxtCssClass} ${drawConfig.plusExpandedCssClass}`);
         $(`#${pkgInfoContainerDivId}`).empty().append(packageDescriptionHtml(pkg));
     }
 
@@ -132,17 +142,23 @@ class App {
             .attr("class", "package")
             .attr("fill", d => this._packages.pacakgeColor(d.data.data.mamAddress) as string);
 
-        /*
+        
         node.each((d, index: number, nodes: Element[]) => {
             const n = nodes[index];
             const pkg = d.data.data;
-            const text = (pkg.inputs && pkg.inputs.length > 0) ? "+" : "";
+            //only when the pkg has the inputs and at least one input doesn't in the this._packages, then we will show "+", otherwise all its inputs are exist and will be drawn, so we needn't show "+"
+            const text =
+                (pkg.inputs &&
+                        pkg.inputs.length > 0 &&
+                        pkg.inputs.filter(ia => !this._packages.packageExist(ia, true)).length > 0)
+                    ? "+"
+                    : "";
             const txtElement = d3.select(n).append("text")
                 .text(text).attr("class", drawConfig.plusTxtCssClass);
             //.attr("fill", color); css will do
             const rect: SVGRect = (txtElement.node() as any).getBBox();
             txtElement.attr("dy", (rect.height / 2) - 12).attr("dx", -(rect.width / 2));
-        });*/
+        });
 
         // adds the text to the node
         //node.append("text")
@@ -174,16 +190,17 @@ class App {
 
     reset(): void {
         this.close();
+        const size = this.prepareSize();
         const $svg = $(this.svgSelector);
-        this._treemap = d3.tree<IPackageTreeData>().size([$svg.width() as number, 500]);
+        this._treemap = d3.tree<IPackageTreeData>().size([size.treeWidth, size.treeHeight]);
         /*
          * Define arraw marker
          */
         //this._svg.defs();
         this._svg//.attr("width", 500)
-            .attr("height", 500)
+            .attr("height", size.height)
             .append("g")
-            .attr("transform", "translate(50, 50)");
+            .attr("transform", `translate(${size.marginLeft}, ${size.marginTop})`);
         this._nodesData = undefined;
         if (this._packages) {
             const pkgs = this._packages.getAllPackages();
@@ -196,6 +213,27 @@ class App {
         //clear all
         this._svg.selectAll("*").remove();
     }
+
+    private static restWndHeight(): number {
+        //calculate the left space without the heard block, so we will make the svg take the whole height of the left space in the windows
+        //please note, after the d3 simulation finished, an event will be triggered and we will resize the svg to have the size just show all the nodes (maybe smaller then the initial size or larger)
+        return ($(window).height() as number) - ($("#headerDiv").height() as number) - 50;
+    }
+
+    private prepareSize(): { width: number; height: number; treeWidth:number; treeHeight:number; marginLeft:number; marginTop: number } {
+        // set the dimensions and margins of the diagram
+        const margin = { top: 20, right: 40, bottom: 20, left: 40 };
+        const width = $(this.svgSelector).width() as number;
+        const height = App.restWndHeight();
+        return {
+            width: width,
+            height: height,
+            treeWidth: width - margin.left - margin.right,
+            treeHeight: height - margin.top - margin.bottom,
+            marginLeft: margin.left,
+            marginTop: margin.top
+        };
+    }
 }
 
 let app: App = new App(`#${mainGraphSvgId}`);
@@ -207,12 +245,7 @@ $("#searchBtn").on("click",
         if (!address) {
             address = $("#inputAddress").attr("placeholder") as string;
         }
-        //calculate the left space without the heard block, so we will make the svg take the whole height of the left space in the windows
-        //please note, after the d3 simulation finished, an event will be triggered and we will resize the svg to have the size just show all the nodes (maybe smaller then the initial size or larger)
-        const restHeight = ($(window).height() as number) - ($("#headerDiv").height() as number);
-        if (restHeight) {
-            $(`#${mainGraphSvgId}`).height(restHeight - 10);
-        }
+        
         $(`#${pkgInfoContainerDivId}`).empty();
         const expandAll = $("#expandAllCheck").is(":checked");
         app.update(address, expandAll);
@@ -246,7 +279,13 @@ function getParameterByName(name: string) {
 $(document as any).ready(() => {
     const address = getParameterByName("address");
     const expandAll = getParameterByName("expandAll");
+    if (expandAll == "true"||typeof (expandAll) === undefined||expandAll === ""||expandAll === null) {
+        $("#expandAllCheck").attr("checked", "checked");
+    } else {
+        $("#expandAllCheck").removeAttr("checked");
+    }
     if (address) {
+        $("#inputAddress").val(address);
         app.reset();
         app.update(address, expandAll !== "false");
     }
