@@ -65,14 +65,24 @@ class App {
      * @param index, accroding to d3js, index is fixed when listern registered, so don't use it
      * @param nodes
      */
-    private onNodeClicked(data: d3.HierarchyPointNode<IPackageTreeData>, index, nodes): void {
+    private async onNodeClicked(data: d3.HierarchyPointNode<IPackageTreeData>, index, nodes): Promise<void> {
         const pkg = data.data.data;
         //expand the node
         if (pkg && pkg.inputs) {
-            pkg.inputs.forEach(address => this.update(address, false));
+            const notExists = pkg.inputs.filter(ia => !this._packages.packageExist(ia, true));
+            if (notExists.length > 0) {
+                for (let i = 0; i < notExists.length; i++) {
+                    const newPkgs = await this.fetchPackage(notExists[i], false);
+                    if (newPkgs.length>0) {
+                        this._packages.addOrUpdate(newPkgs[0]);
+                    }
+                }
+            }
+            //ToDo: currently we didn't implement dynamically add new package, so we have to all new pkg data and redraw
+            this.reset();
         }
         //remove the +
-        d3.select(nodes[index]).selectAll(`text.${drawConfig.plusTxtCssClass}`).attr("class", `${drawConfig.plusTxtCssClass} ${drawConfig.plusExpandedCssClass}`);
+        //d3.select(nodes[index]).selectAll(`text.${drawConfig.plusTxtCssClass}`).attr("class", `${drawConfig.plusTxtCssClass} ${drawConfig.plusExpandedCssClass}`);
         $(`#${pkgInfoContainerDivId}`).empty().append(packageDescriptionHtml(pkg));
     }
 
@@ -132,17 +142,23 @@ class App {
             .attr("class", "package")
             .attr("fill", d => this._packages.pacakgeColor(d.data.data.mamAddress) as string);
 
-        /*
+        
         node.each((d, index: number, nodes: Element[]) => {
             const n = nodes[index];
             const pkg = d.data.data;
-            const text = (pkg.inputs && pkg.inputs.length > 0) ? "+" : "";
+            //only when the pkg has the inputs and at least one input doesn't in the this._packages, then we will show "+", otherwise all its inputs are exist and will be drawn, so we needn't show "+"
+            const text =
+                (pkg.inputs &&
+                        pkg.inputs.length > 0 &&
+                        pkg.inputs.filter(ia => !this._packages.packageExist(ia, true)).length > 0)
+                    ? "+"
+                    : "";
             const txtElement = d3.select(n).append("text")
                 .text(text).attr("class", drawConfig.plusTxtCssClass);
             //.attr("fill", color); css will do
             const rect: SVGRect = (txtElement.node() as any).getBBox();
             txtElement.attr("dy", (rect.height / 2) - 12).attr("dx", -(rect.width / 2));
-        });*/
+        });
 
         // adds the text to the node
         //node.append("text")
@@ -263,6 +279,11 @@ function getParameterByName(name: string) {
 $(document as any).ready(() => {
     const address = getParameterByName("address");
     const expandAll = getParameterByName("expandAll");
+    if (expandAll == "true"||typeof (expandAll) === undefined||expandAll === "") {
+        $("#expandAllCheck").attr("checked", "checked");
+    } else {
+        $("#expandAllCheck").removeAttr("checked");
+    }
     if (address) {
         $("#inputAddress").val(address);
         app.reset();
