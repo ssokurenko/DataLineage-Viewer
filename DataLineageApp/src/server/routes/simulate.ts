@@ -27,6 +27,7 @@ interface IPackageSubmitData {
 async function writeData(seed: string, data: IPackageSubmitData, lightweight: boolean): Promise<IDataPackage | undefined> {
     let writer = writersCache.get(seed) as IOTAWriter;
     if (!writer) {
+        console.log(`iota writer is found from cache for seed ${seed}`);
         writer = new IOTAWriter(serverConfig.iotaProviders[0], seed);
         writersCache.set(seed, writer);
     }

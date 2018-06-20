@@ -19,6 +19,7 @@ export default class IOTAWriter {
             this._seed = Utilities.randomSeed();
         }
         console.log(`seed is ${this._seed}`);
+        console.log(`using provider ${_iotaProvider} for package attaching`);
         this._iota = new IOTA({ provider: _iotaProvider });
         if (lastUsedAddress) {
             this._lastUsedAddress = lastUsedAddress;
@@ -57,6 +58,7 @@ export default class IOTAWriter {
         }
         
         while (true) {
+            console.log(`checking address ${rootAddress} if is used or not...`);
             const one: { nextRoot: string, payload: string } = await Mam.fetchSingle(rootAddress, "public");
             const used = one && one.payload;
             console.log(`address ${rootAddress} is ${used ? "used" : "last"}`);
@@ -71,13 +73,14 @@ export default class IOTAWriter {
         //loop until message is point to the last attahced node
         //if preAddress not defined, means the channel is empty (previous "while" loop stopped at used check for the first time)
         while (preAddress) {
+            console.log(`update mam state to point to last used address`);
             message = Mam.create(mamState, this._iota.utils.toTrytes(JSON.stringify({ "data":"This is a fake messaget to find last" })));
             if (message.address === preAddress) {
                 break;
             }
             mamState = message.state;
         }
-        
+        console.log(`finish updateing mam state to last used address of seed ${this._seed}`);
         this._lastMamState = mamState;
     }
 
@@ -89,7 +92,7 @@ export default class IOTAWriter {
         try {
             await this.initLastMamState();
         } catch (e) {
-            console.error(`check the last address for seed ${this._seed} failed, exception is ${e}`);
+            console.error(`check the last address for seed ${this._seed} failed, exception is ${JSON.stringify(e)}`);
             return undefined;
         } 
         
@@ -109,7 +112,7 @@ export default class IOTAWriter {
             console.log(`package ${json} is submitted, the address is ${message.address}`);
             return { address: message.address, nextRoot: message.state.channel.next_root };
         } catch (e) {
-            console.error(`submitting package ${json} failed, the error is ${e}`);
+            console.error(`submitting package ${json} failed, the error is ${JSON.stringify(e)}`);
             return undefined;
         }
     }

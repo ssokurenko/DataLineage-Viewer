@@ -31,11 +31,13 @@ function waitAny<T>(promises: Promise<T>[]): Promise<T> {
             .then(value => {
                 finishedPromisesCount++;
                 if (!resolved && value) {
+                    console.log(`waitAny function get one promise resolved for the first time, value is ${JSON.stringify(value)}`);
                     promiseOp.resolve(value);
                     resolved = true;
                 }
             })
             .catch(reason => {
+                console.error(`waitAny function get one promise failed with reason ${JSON.stringify(reason)}`);
                 //ToDo: Log the reason
                 finishedPromisesCount++;
                 if (!resolved && finishedPromisesCount >= promises.length) {
@@ -53,13 +55,16 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
     const cached = packageCache.get(address);
     //for old cache, there is no nextRootAddress, so we need to check this and update them
     if (cached && cached.nextRootAddress) {
+        console.log(`Package of address '${address}' is found from cache, just return it`);
         return cached;
     }
     const allApiCalls = config.iotaProviders.map(async (p) => {
+        console.log(`trying to fetch package of address '${address}' from provider ${p}`);
         const iota = new IOTA({ provider: p });
         const mamState = Mam.init(iota);
         //ToDo: if fetchSingle get exception, what will happen
         const mamResult: { payload: string, nextRoot: string } = await Mam.fetchSingle(address, "public", null);
+        console.log(`Package of address '${address}' is fetached from provider ${p}`);
         return {
             json: iota.utils.fromTrytes(mamResult.payload),
             nextRootAddress: mamResult.nextRoot
@@ -69,6 +74,7 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
     try {
         const firstFound = await waitAny(allApiCalls);
         if (firstFound) {
+            console.log(`package of address ${address} is fetched from one provider`);
             const found: IDataPackage = { ...JSON.parse(firstFound.json), mamAddress: address, nextRootAddress: firstFound.nextRootAddress } as IDataPackage;
             packageCache.set(address, found);
             return found;
@@ -76,6 +82,7 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
         return null;
     } catch (e) {
         //ToDo: Log
+        console.error(`Fetch package of address '${address}' failed with error ${JSON.stringify(e)}`);
         //if all not foudn, then will reject, so get the exception
         //we return an empty object to indicate it no result
         return null;
