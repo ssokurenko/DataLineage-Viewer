@@ -18,6 +18,24 @@ export interface IProp {
     onSeedConfirmed?(seed: string);
 }
 
+
+interface IField {
+    key: string;
+    value: string;
+}
+
+interface IFieldError {
+    /**
+     * The error of the key
+     */
+    key?: string;
+    /**
+     * the error of the value
+     */
+    value?: string;
+}
+
+
 class State {
     constructor(seed?: string) {
         if (seed) {
@@ -27,6 +45,10 @@ class State {
 
     seed: string | undefined;
     value: any = "";
+    valueIsValid: boolean = true;
+    otherFields: IField[] = [];
+    otherFieldsError: IFieldError[] = [];
+    ownerMetadata: any;
     packageType: "lightweight" | "standard" = lightweight;
     log: string[] = [];
     packageInputsAddress: string[] = [];
@@ -50,22 +72,46 @@ export class Publisher extends React.Component<IProp, State> {
         this.setState({ log: this.state.log.concat([message]) });
     }
 
+    private validate(): boolean {
+        let hasError = false;
+        if (typeof (this.state.value) === "undefined" || this.state.value.trim() === "") {
+            this.setState({ valueIsValid: false });
+            hasError = true;
+        }
+        for (let i = 0; i < this.state.otherFields.length; i++) {
+            const f = this.state.otherFields[i];
+            this.state.otherFieldsError[i] = {
+                key: f.key ? undefined : "missing",
+                value: f.value ? undefined : "missing",
+            }
+            if (!f.key||!f.value) {
+                hasError = true;
+            }
+        }
+        return !hasError;
+    }
+
     private async onAddClick(event: Event): Promise<void> {
-        if (typeof(this.state.value) === "undefined" || this.state.value.trim() === "") {
+        if (!this.validate()) {
             return;
         }
         const pkgId = uuid();
         this.log(`submitting package ${pkgId}`);
         this.setState({ isSubmitting: true });
+        const newPkg = {
+            inputs: this.state.packageInputsAddress,
+            value: this.state.value,
+            dataPackageId: pkgId
+        };
+        this.state.otherFields.forEach(f => newPkg[f.key] = f.value);
+        if (this.state.ownerMetadata) {
+            newPkg["ownerMetadata"] = this.state.ownerMetadata;
+        }
         try {
             const pkg = await $.ajax(`/api/simulate/${this.state.packageType}/${this.state.seed}`,
                 {
                     method: "POST",
-                    data: JSON.stringify({
-                        inputs: this.state.packageInputsAddress,
-                        value: this.state.value,
-                        dataPackageId: pkgId
-                    }),
+                    data: JSON.stringify(newPkg),
                     contentType: "application/json",
                     dataType: "json"
                 });
@@ -82,8 +128,13 @@ export class Publisher extends React.Component<IProp, State> {
         event.preventDefault();
     }
 
-    private onValueChange(event: React.ChangeEvent<HTMLInputElement>) {
-        this.setState({ value: event.target.value});
+    private onValueChange(changedField: string, event: React.ChangeEvent<HTMLInputElement>) {
+        const changed = {};
+        changed[changedField] = event.target.value;
+        if (changedField === "value") {
+            changed["valueIsValid"] = true;
+        }
+        this.setState(changed);
     }
 
     private onPackageTypeChanged(event: React.ChangeEvent<HTMLInputElement>) {
@@ -105,6 +156,86 @@ export class Publisher extends React.Component<IProp, State> {
         }
     }
 
+    private onAddFieldClick(event: React.ChangeEvent<HTMLButtonElement>) {
+        this.setState({
+            otherFields: this.state.otherFields.concat([{ key: "", value: "" }]),
+            otherFieldsError: this.state.otherFieldsError.concat([{}])
+        });
+    }
+
+    private onRemoveFieldClick(index:number, event: React.ChangeEvent<HTMLButtonElement>) {
+        this.setState({
+            otherFields: this.state.otherFields.filter((x, i) => i !== index),
+            otherFieldsError: this.state.otherFieldsError.filter((x, i) => i !== index)
+        });
+    }
+
+    private resetOtherFieldsError(index: number): IFieldError[] {
+        return this.state.otherFieldsError.map((item, i) => {
+            if (i !== index) {
+                return item;
+            }
+            return {};
+        });
+    }
+
+    private onOtherFieldChanged(fieldIndex: number, changedPart: "key" | "value", event: React.ChangeEvent<HTMLInputElement>) {
+        this.setState({
+            otherFields: this.state.otherFields.map((item, i) => {
+                if (i !== fieldIndex) {
+                    return item;
+                }
+                const newField = { ...item } as IField;
+                newField[changedPart] = event.target.value;
+                return newField;
+            }),
+            otherFieldsError: this.resetOtherFieldsError(fieldIndex)
+        });
+    }
+
+    private renderOtherFields() {
+        const isError = (p: "key" | "value", index: number): boolean => {
+            if (this.state.otherFieldsError[index][p]) {
+                return true;
+            } else {
+                return false;
+            }
+        };
+        return <React.Fragment>
+            <div className="form-row align-items-center">
+                <div className="col-auto">
+                    <label>Add more fields</label>
+                </div>
+                <div className="col-auto">
+                    <button type="submit" className="btn btn-primary mb-2" onClick={this.onAddFieldClick.bind(this)}>Add Field</button>
+                </div>
+            </div>
+            {this.state.otherFields.map((item, index) => <div className="form-group row" key={index}>
+                <div className="col-sm-2">
+                    <div className="input-group">
+                        <div className="input-group-prepend">
+                            <div className="input-group-text">Field</div>
+                            <div className="input-group-text" onClick={this.onRemoveFieldClick.bind(this, index)}>
+                                <i className="fas fa-trash-alt"></i>
+                            </div>
+                        </div>
+                        <input value={item.key} onChange={this.onOtherFieldChanged.bind(this, index, "key")} type="text" className={`form-control ${isError("key", index) ? "is-invalid" : ""}`} placeholder="Input the new field name" />
+                        <div className="invalid-feedback">Please input the field name.</div>
+                    </div>
+                </div>
+                <div className="col-sm-10">
+                    <div className="input-group">
+                        <div className="input-group-prepend">
+                            <div className="input-group-text">Value</div>
+                        </div>
+                        <input value={item.value} onChange={this.onOtherFieldChanged.bind(this, index, "value")} type="text" className={`form-control ${isError("value", index) ? "is-invalid" : ""}`} placeholder="Input the field value" />
+                        <div className="invalid-feedback">Please input the field value.</div>
+                    </div>
+                </div>
+            </div>)}
+        </React.Fragment>;
+    }
+
     private renderValueInput() {
         return <div className="row">
                    <div className="col-sm-12">
@@ -115,11 +246,23 @@ export class Publisher extends React.Component<IProp, State> {
                                    <div className="input-group-prepend">
                                        <div className="input-group-text"><i className="fas fa-code-branch"></i></div>
                                    </div>
-                                   <input value={this.state.value} onChange={this.onValueChange.bind(this)} type="text" className="form-control" id="valueInput" placeholder="Input the new value"/>
+                                   <input value={this.state.value} onChange={this.onValueChange.bind(this, "value")} type="text" className={`form-control ${this.state.valueIsValid ? "" : "is-invalid"}`} id="valueInput" placeholder="Input the new value" required />
+                                   <div className="invalid-feedback">Please input the value.</div>
                                </div>
                            </div>
                        </div>
-
+                       {this.renderOtherFields()}
+                       <div className="form-group row">
+                           <label htmlFor="valueInput" className="col-sm-2 col-form-label">Owner metadata</label>
+                           <div className="col-sm-10">
+                               <div className="input-group">
+                                   <div className="input-group-prepend">
+                                   <div className="input-group-text"><i className="fas fa-address-book"></i></div>
+                                   </div>
+                                   <input value={this.state.ownerMetadata} onChange={this.onValueChange.bind(this, "ownerMetadata")} type="text" className="form-control" placeholder="Owner information" />
+                               </div>
+                           </div>
+                       </div>
                        <fieldset className="form-group">
                            <div className="row">
                                <legend className="col-form-label col-sm-2 pt-0">Protocol type</legend>
@@ -142,7 +285,8 @@ export class Publisher extends React.Component<IProp, State> {
                                    {this.state.isSubmitting && <i className="fas fa-sync-alt fa-spin" />}
                                </button>
                            </div>
-                       </div></div>
+                       </div>
+                   </div>
                </div>;
     }
 
