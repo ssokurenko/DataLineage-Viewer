@@ -1,0 +1,18 @@
+﻿doctype html
+html
+  head
+    title= title
+    script(data-base="/javascripts/", data-main="cdn-load-fallback", src="/javascripts/fallback.min.js", type="application/javascript")
+    link(rel='stylesheet', href='/stylesheets/main.css')
+  body
+    ul(class="nav")
+      li(class="nav-item")
+        a(class="nav-link", href="/") Home
+      li(class="nav-item")
+        a(class="nav-link", href="/simulate/publisher") Publisher
+      li(class="nav-item")
+        a(class="nav-link", href="/simulate/processor") Processor
+      li(class="nav-item")
+        a(class="nav-link", href="/about") About
+    div(class="container-fluid")
+      block content

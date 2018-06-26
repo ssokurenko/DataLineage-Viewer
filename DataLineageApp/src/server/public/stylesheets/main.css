@@ -1,0 +1,103 @@
+﻿.node {
+    
+}
+
+circle.package {
+}
+
+.node text.expand-plus {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #696969;
+}
+.node text.expand-plus.expanded {
+    display: none;
+}
+
+@media (min-width: 100px) {
+    /* for package node */
+    .node circle.package {
+        r: 10;
+        stroke-width: 7;
+    }
+
+    /* for pie of each intputs */
+    .node circle.input-pie {
+        r: 5; /*must half .node circle.package's r */
+        stroke-width: 10; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
+    }
+}
+
+@media (min-width: 576px) {
+    /* for package node */
+    .node circle.package {
+        r: 10;
+        stroke-width: 7;
+    }
+
+    /* for pie of each intputs */
+    .node circle.input-pie {
+        r: 5; /*must half .node circle.package's r */
+        stroke-width: 10; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
+    }
+}
+
+@media (min-width: 768px) {
+    .node circle.package {
+        r: 15;
+        stroke-width: 7;
+    }
+
+    /* for pie of each intputs */
+    .node circle.input-pie {
+        r: 7; /*must half .node circle.package's r */
+        stroke-width: 15; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
+    }
+}
+
+@media (min-width: 992px) {
+    .node circle.package {
+        r: 16;
+        stroke-width: 9;
+    }
+
+    /* for pie of each intputs */
+    .node circle.input-pie {
+        r: 8; /*must half .node circle.package's r */
+        stroke-width: 16; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
+    }
+}
+
+@media (min-width: 1200px) {
+    .node circle.package {
+        r: 16;
+        stroke-width: 9;
+    }
+
+    /* for pie of each intputs */
+    .node circle.input-pie {
+        r: 8; /*must half .node circle.package's r */
+        stroke-width: 16; /*must same as .node circle.package's r, so the pie will take full radius of the parent node circle */
+    }
+}
+
+.link {
+    stroke: #696969;
+}
+
+.link.tree {
+    stroke-width: 2px;
+    fill: none;
+}
+
+.node.tree circle.package {
+    r: 12;
+}
+
+.popover.pacakge-tooltip {
+    max-width: 26rem;
+}
+
+.popover.pacakge-tooltip .card {
+    width: 20rem;
+}

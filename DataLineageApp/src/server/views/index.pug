@@ -1,0 +1,24 @@
+﻿extends layout
+
+block content
+  div(id="headerDiv")
+    h1= title
+    div(class="form-inline")
+      label(for="inputAddress", class="my-1 mr-2") Address
+    
+      div(class="custom-control custom-checkbox my-1 mr-sm-2")
+        input(type="checkbox", class="custom-control-input", checked, id="expandAllCheck")
+        label(class="custom-control-label", for="expandAllCheck") Expand All Packages
+    
+      div(class="input-group")
+        input(type="text", class="form-control", id="inputAddress", placeholder="OAZUEUIFHISXGUFCBBRTJBRLIJJEJFFEIVSFHPNQRRHIXXKUCXVQNDIVXVNOICUWLLYEZVADHHULIEOFY")
+        div(class="input-group-append")
+          button(class="btn btn-outline-secondary", type="button", id="searchBtn")
+            i(class="fas fa-search")
+    div(class="alert alert-warning", role="alert", id="loadingAlert", style="display: none;") Querying from server
+      i(class="fas fa-sync-alt fa-spin")
+
+  div(class="row")
+    div(class="col-md-12 col-lg-6")
+      svg(width="100%", id="mainGraphSvg")
+    div(class="col-md-12 col-lg-6", id="pkgInfoContainerDiv")

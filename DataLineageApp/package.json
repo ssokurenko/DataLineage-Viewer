@@ -1,0 +1,80 @@
+{
+  "name": "data-lineage-app",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./dist/server-app",
+    "start:watch-server": "nodemon --exec \"npm run start\"",
+    "start:watch": "npm-run-all --parallel build:dev-w start:watch-server",
+    "build": "npm run build:cmds && npm run build:dev",
+    "build:all:prod": "npm run build:cmds && npm run build:prod",
+    "build:cmds": "cd ./src/cmds && tsc",
+    "build:dev": "webpack --mode=development",
+    "build:dev-w": "webpack --mode=development --watch",
+    "build:prod": "webpack --mode=production",
+    "clean": "del-cli dist/** && del-cli cmd_tools/**",
+    "cmd:simulate": "node ./cmd_tools/cmds/mam-cmd.js -simulate"
+  },
+  "description": "DataLineageApp",
+  "author": {
+    "name": "DNVGL"
+  },
+  "devDependencies": {
+    "@types/bootstrap": "^4.1.0",
+    "@types/cookie-parser": "^1.4.1",
+    "@types/d3": "^5.0.0",
+    "@types/debug": "^0.0.30",
+    "@types/exit-hook": "^1.1.0",
+    "@types/express": "^4.11.1",
+    "@types/iota.lib.js": "^0.4.0",
+    "@types/jquery": "^3.3.1",
+    "@types/morgan": "^1.7.35",
+    "@types/node": "8.10.12",
+    "@types/react": "^16.3.17",
+    "@types/react-dom": "^16.0.6",
+    "copy-webpack-plugin": "^4.5.1",
+    "del-cli": "^1.1.0",
+    "nodemon": "^1.17.5",
+    "npm-run-all": "^4.1.3",
+    "ts-loader": "^4.3.0",
+    "ts-node": "^6.0.3",
+    "typescript": "^2.8.3",
+    "webpack": "^4.8.1",
+    "webpack-cli": "^2.1.3"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cookie-parser": "^1.4.0",
+    "crypto": "^1.0.1",
+    "debug": "^2.2.0",
+    "exit-hook": "^2.0.0",
+    "express": "^4.14.0",
+    "flat-cache": "^1.3.0",
+    "global-tunnel": "^1.2.0",
+    "iota.lib.js": "0.4.2",
+    "morgan": "^1.7.0",
+    "node-cache": "^4.2.0",
+    "pug": "^2.0.0-beta6",
+    "react": "^16.4.0",
+    "react-dom": "^16.4.0",
+    "readline": "^1.3.0",
+    "serve-favicon": "^2.3.0",
+    "uuid": "^3.2.1"
+  },
+  "nodemonConfig": {
+    "verbose": true,
+    "ext": "js",
+    "ignore": [
+      "dist/views/**",
+      "dist/public/**"
+    ],
+    "watch": [
+      "dist"
+    ]
+  },
+  "-vs-binding": {
+    "BeforeBuild": [
+      "build"
+    ]
+  }
+}
