@@ -1,11 +1,16 @@
 ﻿import * as express from "express";
 import IOTA = require("iota.lib.js");
-import * as Mam from "../mam.node.js";
+import * as Mam from "../../../../mam.client.js/lib/mam.client";
 import config from "../server-config";
 import { IDataPackage } from "../data-package";
 import { packageCache } from "../server-global-cache";
 
 const router = express.Router();
+
+interface IIOTAFetchResult {
+    json: string;
+    nextRootAddress: string;
+}
 
 /**
  * wait until one promese resolved or all promise rejected
@@ -34,6 +39,10 @@ function waitAny<T>(promises: Promise<T>[]): Promise<T> {
                     console.log(`waitAny function get one promise resolved for the first time, value is ${JSON.stringify(value)}`);
                     promiseOp.resolve(value);
                     resolved = true;
+                } else if (!resolved && finishedPromisesCount >= promises.length) {
+                    console.log(`waitAny function all are finished, but none return a value, so return null instead`);
+                    promiseOp.resolve(null);
+                    resolved = true;
                 }
             })
             .catch(reason => {
@@ -48,6 +57,24 @@ function waitAny<T>(promises: Promise<T>[]): Promise<T> {
     return result;
 }
 
+function fetchMam(p: string, address: string): Promise<IIOTAFetchResult | null> {
+    console.log(`trying to fetch package of address '${address}' from provider ${p}`);
+    const iota = new IOTA({ provider: p });
+    const mamState = Mam.init(iota);
+    //ToDo: if fetchSingle get exception, what will happen
+    return Mam.fetchSingle(address, "public", null)
+        .then((mamResult: { payload: string, nextRoot: string }) => {
+            console.log(`Package of address '${address}' is fetached from provider ${p}`);
+            return {
+                json: iota.utils.fromTrytes(mamResult.payload),
+                nextRootAddress: mamResult.nextRoot
+            };
+        }).catch(reason => {
+            console.error(`Fetch package of address '${address}' failed with error ${JSON.stringify(reason)} from ${p}`);
+            return null;
+        });
+}
+
 async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage | null> {
     if (!address) {
         return null;
@@ -58,21 +85,19 @@ async function fetchPacakgeInfoWithCache(address: string): Promise<IDataPackage 
         console.log(`Package of address '${address}' is found from cache, just return it`);
         return cached;
     }
-    const allApiCalls = config.iotaProviders.map(async (p) => {
-        console.log(`trying to fetch package of address '${address}' from provider ${p}`);
-        const iota = new IOTA({ provider: p });
-        const mamState = Mam.init(iota);
-        //ToDo: if fetchSingle get exception, what will happen
-        const mamResult: { payload: string, nextRoot: string } = await Mam.fetchSingle(address, "public", null);
-        console.log(`Package of address '${address}' is fetached from provider ${p}`);
-        return {
-            json: iota.utils.fromTrytes(mamResult.payload),
-            nextRootAddress: mamResult.nextRoot
-        };
-    });
+    
+    let firstFound: IIOTAFetchResult | null = null;
+    for (let i = 0; i < config.iotaProviders.length; i++) {
+        if (firstFound) break;
+        const p = config.iotaProviders[i];
+        try {
+            firstFound = await fetchMam(p, address);
+        } catch (e) {
+            console.error(`Fetch package of address '${address}' failed with error ${JSON.stringify(e)} from ${p}`);
+        }
+    }
 
     try {
-        const firstFound = await waitAny(allApiCalls);
         if (firstFound) {
             console.log(`package of address ${address} is fetched from one provider`);
             const found: IDataPackage = { ...JSON.parse(firstFound.json), mamAddress: address, nextRootAddress: firstFound.nextRootAddress } as IDataPackage;

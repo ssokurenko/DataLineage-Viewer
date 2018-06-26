@@ -1,5 +1,4 @@
 ﻿import express = require("express");
-import NodeCache = require("node-cache");
 import uuid = require("uuid/v4");
 import crypto = require("crypto");
 import IOTAWriter from "../../cmds/IOTAWriter";
@@ -32,12 +31,15 @@ async function writeData(seed: string, data: IPackageSubmitData, lightweight: bo
         writersCache.set(seed, writer);
     }
     const pkg: IDataPackage = {
+        ...data as any,
         timestamp: Date.now(),
         dataPackageId: data.dataPackageId ? data.dataPackageId : uuid(),
         inputs: data.inputs ? data.inputs : [],
         mamAddress: "",
         nextRootAddress: ""
     };
+    //value is added by ...data
+    delete (pkg as any).value;
     
     if (lightweight) {
         (pkg as ILightweightPackage).data = data.value;

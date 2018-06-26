@@ -36,7 +36,6 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="src\server\mam.node.js" />
     <Compile Include="src\server\public\javascripts\bootstrap\bootstrap.min.js" />
     <Compile Include="src\server\public\javascripts\cdn-load-fallback.js">
       <SubType>Code</SubType>

@@ -1,5 +1,5 @@
 ﻿import IOTA = require("iota.lib.js");
-import * as Mam from "../server/mam.node.js";
+import * as Mam from "../../../mam.client.js/lib/mam.client";
 import Utilities from "../common/utilities";
 
 export interface IIOTAWriterJsonData {
