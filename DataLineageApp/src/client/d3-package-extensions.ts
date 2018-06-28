@@ -2,18 +2,35 @@
 import * as bootstrap from "bootstrap";
 
 import { IDataPackage, ILightweightPackage, IStandardPackage } from "../server/data-package";
+import dataOperations, {DataOperationCategory} from "./process-operation";
+
 
 export function packageDescriptionHtml(pkg: IDataPackage | ILightweightPackage | IStandardPackage): string {
     let listContent = "";
+    let hasOpertaion = false;
     if (pkg) {
         for (let f in pkg) {
-            if (pkg.hasOwnProperty(f) && f !=="nextRootAddress") {
-                listContent += `<li class="list-group-item">${f}: ${pkg[f]}</li>`;
+            if (pkg.hasOwnProperty(f) && f !== "nextRootAddress") {
+                let icon: string | undefined = undefined;
+                if (f === nameof<IDataPackage>(p => p.operation)) {
+                    const found = dataOperations.filter(o => DataOperationCategory[o.category] === pkg[f]);
+                    if (found.length > 0) {
+                        icon = found[0].iconCss;
+                        hasOpertaion = true;
+                    }
+                }
+                listContent += `<li class="list-group-item">${f}: ${icon ? `<i class="${icon}"></i>` : ""} ${pkg[f]}</li>`;
             }
         }
     }
-
-    const html = `<div class="card bg-light"><div class="card-body"><h5 class="card-title">Package Information</h5></div><ul class="list-group list-group-flush">${listContent}</ul></div>`;
+    let footer = "";
+    if (hasOpertaion) {
+        dataOperations.forEach(o => {
+            footer += `<span class="badge badge-light"><i class="${o.iconCss}"></i>&nbsp${DataOperationCategory[o.category]}</span>`;
+        });
+        footer = `<div class="card-footer text-muted">${footer}</div>`;
+    }
+    const html = `<div class="card bg-light"><div class="card-body"><h5 class="card-title">Package Information</h5></div><ul class="list-group list-group-flush">${listContent}</ul>${footer}</div>`;
     return html;
 }
 

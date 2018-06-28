@@ -33,10 +33,10 @@ cfg({
         "css$fontawesome": {
             "exports": ".fa-search",
             "check": function () {
-                return checkCss("https://use.fontawesome.com/releases/v5.0.13/css/all.css");
+                return checkCss("https://use.fontawesome.com/releases/v5.1.0/css/all.css");
             },
             "urls": [
-                "https://use.fontawesome.com/releases/v5.0.13/css/all.css",
+                "https://use.fontawesome.com/releases/v5.1.0/css/all.css",
                 "fontawesome/fontawesome-all.min.css"
             ]
         },

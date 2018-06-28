@@ -4,6 +4,8 @@ import { SeedInput } from "./seed-input";
 import { LogOutput } from "./log-output";
 import { ChannelPackagesList } from "./channel-packages-list";
 import { IDataPackage } from "../../server/data-package";
+import dataOperations, { DataOperationCategory} from "../process-operation";
+
 
 const lightweight = "lightweight";
 const standard = "standard";
@@ -52,6 +54,8 @@ class State {
     packageType: "lightweight" | "standard" = lightweight;
     log: string[] = [];
     packageInputsAddress: string[] = [];
+    operation?: string;
+    operationIsValid: boolean = true;
     isSubmitting: boolean = false;
 }
 
@@ -72,6 +76,10 @@ export class Publisher extends React.Component<IProp, State> {
         this.setState({ log: this.state.log.concat([message]) });
     }
 
+    private notEmptyInputAddresses() {
+        return this.props.inputsAddress ? this.props.inputsAddress.filter(a => a) : [];
+    }
+
     private validate(): boolean {
         let hasError = false;
         if (typeof (this.state.value) === "undefined" || this.state.value.trim() === "") {
@@ -87,6 +95,11 @@ export class Publisher extends React.Component<IProp, State> {
             if (!f.key||!f.value) {
                 hasError = true;
             }
+            this.setState({ otherFieldsError: this.state.otherFieldsError.map(f => f) });
+        }
+        if (this.notEmptyInputAddresses().length > 0 && !this.state.operation) {
+            this.setState({ operationIsValid: false });
+            hasError = true;
         }
         return !hasError;
     }
@@ -106,6 +119,9 @@ export class Publisher extends React.Component<IProp, State> {
         this.state.otherFields.forEach(f => newPkg[f.key] = f.value);
         if (this.state.ownerMetadata) {
             newPkg["ownerMetadata"] = this.state.ownerMetadata;
+        }
+        if (this.state.operation && this.notEmptyInputAddresses().length > 0) {
+            newPkg["operation"] = this.state.operation;
         }
         try {
             const pkg = await $.ajax(`/api/simulate/${this.state.packageType}/${this.state.seed}`,
@@ -135,6 +151,10 @@ export class Publisher extends React.Component<IProp, State> {
             changed["valueIsValid"] = true;
         }
         this.setState(changed);
+    }
+
+    private onOperationChanged(event: React.ChangeEvent<HTMLSelectElement>) {
+        this.setState({operation: event.target.value});
     }
 
     private onPackageTypeChanged(event: React.ChangeEvent<HTMLInputElement>) {
@@ -269,11 +289,13 @@ export class Publisher extends React.Component<IProp, State> {
                                <div className="col-sm-10">
                                    <div className="form-check">
                                        <input onChange={this.onPackageTypeChanged.bind(this)} className="form-check-input" type="radio" name="packageType" id="packageTypeSimpleInput" value={lightweight} checked={this.state.packageType === lightweight}/>
-                                       <label className="form-check-label" htmlFor="packageTypeSimpleInput">{`${lightweight} protocol`}</label>
+                                       <label className="form-check-label" htmlFor="packageTypeSimpleInput">{`${
+                                           lightweight} protocol`}</label>
                                    </div>
                                    <div className="form-check">
                                        <input onChange={this.onPackageTypeChanged.bind(this)} className="form-check-input" type="radio" name="packageType" id="packageTypeStandardInput" value={standard} checked={this.state.packageType === standard}/>
-                                       <label className="form-check-label" htmlFor="packageTypeStandardInput">{`${standard} protocol`}</label>
+                                       <label className="form-check-label" htmlFor="packageTypeStandardInput">{`${
+                                           standard} protocol`}</label>
                                    </div>
                                </div>
                            </div>
@@ -282,7 +304,7 @@ export class Publisher extends React.Component<IProp, State> {
                        <div className="form-group row">
                            <div className="col-sm-10">
                                <button type="button" className="btn btn-primary mb-2" onClick={this.onAddClick.bind(this)}>Add
-                                   {this.state.isSubmitting && <i className="fas fa-sync-alt fa-spin" />}
+                                   {this.state.isSubmitting && <i className="fas fa-sync-alt fa-spin"/>}
                                </button>
                            </div>
                        </div>
@@ -290,11 +312,29 @@ export class Publisher extends React.Component<IProp, State> {
                </div>;
     }
 
+    private renderOperationField() {
+        const has = this.notEmptyInputAddresses().length > 0;
+        return <div className="row form-group">
+                   <label className="col-sm-2 col-form-label">Operation</label>
+            <div className="col-sm-10">
+                {has && <div className="input-group">
+                    <select value={this.state.operation} onChange={this.onOperationChanged.bind(this)} className={`form-control ${this.state.operationIsValid ? "" : "is-invalid"}`} required={true}>
+                        {dataOperations.map(
+                            o => <option key={o.category} value={DataOperationCategory[o.category]}>
+                                {DataOperationCategory[o.category]}</option>)}
+                    </select>
+                    <div className="invalid-feedback">Please select the operation.</div>
+                </div>}
+            </div>
+        </div>;
+    }
+
     private renderChannelPackages() {
+        const has = this.notEmptyInputAddresses().length > 0;
         return <div className="row">
                    <div className="col-sm-12">
-                       {this.props.inputsAddress &&
-                           this.props.inputsAddress.map(a =>
+                       {has &&
+                           this.notEmptyInputAddresses().map(a =>
                                <ChannelPackagesList key={a} rootAddress={a} selectedInputsAddress={this.state.packageInputsAddress} onPackageSelected={this.onPackageSelectedAsInput.bind(this)}/>)}
                    </div>
                </div>;
@@ -306,6 +346,7 @@ export class Publisher extends React.Component<IProp, State> {
                    {(typeof (this.props.inputsConfirmed) === "undefined" || this.props.inputsConfirmed) &&
                        <React.Fragment>
                            {this.renderChannelPackages()}
+                           {this.renderOperationField()}
                            {this.state.seed && this.renderValueInput()}
                            <div className="row">
                                <div className="col-sm-12">

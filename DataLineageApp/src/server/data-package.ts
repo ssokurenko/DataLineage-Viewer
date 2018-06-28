@@ -16,6 +16,7 @@
      * The address of MAM for each input of the data package
      */
     inputs: string[];
+    operation?: string;
 }
 
 export interface ILightweightPackage extends IDataPackage {

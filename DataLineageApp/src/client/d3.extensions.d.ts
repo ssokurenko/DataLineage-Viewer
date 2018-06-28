@@ -1,4 +1,5 @@
 ﻿/// <reference path="../../node_modules/@types/d3-selection/index.d.ts"/>
+/// <reference path="../../node_modules/ts-nameof/ts-nameof.d.ts" />
 import {IDataPackage} from "../server/data-package";
 
 declare module "d3-selection" {
