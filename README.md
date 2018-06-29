@@ -2,6 +2,9 @@
 DataLineage app is a nodejs application and the development language is [Typescript](https://www.typescriptlang.org/ "Typescript") for both frontend and server side.
 The logic of this application is based on the artical [Data Integrity and Lineage by using IOTA](http://fenglu.me/2018/04/16/Data-integrity-and-data-lineage-by-using-IOTA/ "Data Integrity and Lineage by using IOTA")
 
+## Live demo
+http://datalineage-viewer.azurewebsites.net/
+
 ## Technical Detail
 The server have two apis:
 1. api/address/:address, the parameter ":address" is the address of the package and this api will return the package infromation of the address
