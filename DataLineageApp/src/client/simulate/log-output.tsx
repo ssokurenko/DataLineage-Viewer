@@ -12,7 +12,7 @@ export class LogOutput extends React.Component<IProp, any> {
     render() {
         const style: React.CSSProperties = { wordWrap: "break-word" };
         return <ul className="list-group" style={style}>
-                   {this.props.log.map((l, i) => <li key={i} className="list-group-item">{l}</li>)}
+                   {this.props.log.map((l, i) => <li key={i} className="list-group-item"><pre>{l}</pre></li>)}
                </ul>;
     }
 }

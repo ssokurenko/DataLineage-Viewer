@@ -4,7 +4,7 @@ import { SeedInput } from "./seed-input";
 import { LogOutput } from "./log-output";
 import { ChannelPackagesList } from "./channel-packages-list";
 import { IDataPackage } from "../../server/data-package";
-import dataOperations, { DataOperationCategory} from "../process-operation";
+import dataOperations, { DataOperationCategory, DataOperation} from "../process-operation";
 
 
 const lightweight = "lightweight";
@@ -80,6 +80,12 @@ export class Publisher extends React.Component<IProp, State> {
         return this.props.inputsAddress ? this.props.inputsAddress.filter(a => a) : [];
     }
 
+    componentWillMount(): void {
+        if (!this.state.operation) {
+            this.setState({ operation: DataOperationCategory[dataOperations[0].category]});
+        }
+    }
+
     private validate(): boolean {
         let hasError = false;
         if (typeof (this.state.value) === "undefined" || this.state.value.trim() === "") {
@@ -133,7 +139,7 @@ export class Publisher extends React.Component<IProp, State> {
                 });
             if (pkg) {
                 this.setState({ value: "", packageInputsAddress: [] });
-                this.log(`package ${JSON.stringify(pkg)} is submitted.`);
+                this.log(`package is submitted as below: \n ${JSON.stringify(pkg, null, 4)}`);
             } else {
                 this.log(`package submitte failed.`);
             }
@@ -223,15 +229,16 @@ export class Publisher extends React.Component<IProp, State> {
         };
         return <React.Fragment>
             <div className="form-row align-items-center">
-                <div className="col-auto">
+                <div className="col-sm-2">
                     <label>Add more fields</label>
                 </div>
-                <div className="col-auto">
+                <div className="col-sm-10">
                     <button type="submit" className="btn btn-primary mb-2" onClick={this.onAddFieldClick.bind(this)}>Add Field</button>
                 </div>
             </div>
             {this.state.otherFields.map((item, index) => <div className="form-group row" key={index}>
-                <div className="col-sm-2">
+                <div className="col-sm-2"></div>
+                <div className="col-sm-5">
                     <div className="input-group">
                         <div className="input-group-prepend">
                             <div className="input-group-text">Field</div>
@@ -243,7 +250,7 @@ export class Publisher extends React.Component<IProp, State> {
                         <div className="invalid-feedback">Please input the field name.</div>
                     </div>
                 </div>
-                <div className="col-sm-10">
+                <div className="col-sm-5">
                     <div className="input-group">
                         <div className="input-group-prepend">
                             <div className="input-group-text">Value</div>
@@ -272,6 +279,7 @@ export class Publisher extends React.Component<IProp, State> {
                            </div>
                        </div>
                        {this.renderOtherFields()}
+                       {this.renderOperationField()}
                        <div className="form-group row">
                            <label htmlFor="valueInput" className="col-sm-2 col-form-label">Owner metadata</label>
                            <div className="col-sm-10">
@@ -314,19 +322,34 @@ export class Publisher extends React.Component<IProp, State> {
 
     private renderOperationField() {
         const has = this.notEmptyInputAddresses().length > 0;
-        return <div className="row form-group">
-                   <label className="col-sm-2 col-form-label">Operation</label>
-            <div className="col-sm-10">
-                {has && <div className="input-group">
-                    <select value={this.state.operation} onChange={this.onOperationChanged.bind(this)} className={`form-control ${this.state.operationIsValid ? "" : "is-invalid"}`} required={true}>
-                        {dataOperations.map(
-                            o => <option key={o.category} value={DataOperationCategory[o.category]}>
-                                {DataOperationCategory[o.category]}</option>)}
-                    </select>
-                    <div className="invalid-feedback">Please select the operation.</div>
-                </div>}
-            </div>
-        </div>;
+        let selectedOp: DataOperation | undefined = undefined;
+        if (this.state.operation) {
+            const filtered =
+                dataOperations.filter(o => o.category === DataOperationCategory[this.state.operation as string]);
+            selectedOp = filtered.length > 0 ? filtered[0] : undefined;
+        }
+        return <React.Fragment>
+                   {has &&
+                       <div className="row form-group">
+                           <label className="col-sm-2 col-form-label">Operation</label>
+                           <div className="col-sm-10">
+                               <div className="input-group">
+                                   <select value={this.state.operation} onChange={this.onOperationChanged.bind(this)} className={`form-control ${this.state.operationIsValid ? "" : "is-invalid"}`} required={true}>
+                                       {dataOperations.map(o => <option key={o.category} value={DataOperationCategory[o.category]}>{DataOperationCategory[o.category]}</option>)}
+                                   </select>
+                                   <div className="invalid-feedback">Please select the operation.</div>
+                               </div>
+                           </div>
+                       </div>}
+                   {has &&
+                       <div className="row form-group">
+                           <div className="col-sm-2">
+                           </div>
+                           <div className="col-sm-10">
+                               <p>{selectedOp ? selectedOp.description : ""}</p>
+                           </div>
+                       </div>}
+               </React.Fragment>;
     }
 
     private renderChannelPackages() {
@@ -346,7 +369,6 @@ export class Publisher extends React.Component<IProp, State> {
                    {(typeof (this.props.inputsConfirmed) === "undefined" || this.props.inputsConfirmed) &&
                        <React.Fragment>
                            {this.renderChannelPackages()}
-                           {this.renderOperationField()}
                            {this.state.seed && this.renderValueInput()}
                            <div className="row">
                                <div className="col-sm-12">
