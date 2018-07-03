@@ -12,24 +12,29 @@ export function packageDescriptionHtml(pkg: IDataPackage | ILightweightPackage |
         for (let f in pkg) {
             if (pkg.hasOwnProperty(f) && f !== "nextRootAddress") {
                 let icon: string | undefined = undefined;
+                let opDesc: string = "";
                 if (f === nameof<IDataPackage>(p => p.operation)) {
                     const found = dataOperations.filter(o => DataOperationCategory[o.category] === pkg[f]);
                     if (found.length > 0) {
                         icon = found[0].iconCss;
                         hasOpertaion = true;
+                        opDesc = found[0].description;
                     }
                 }
-                listContent += `<li class="list-group-item">${f}: ${icon ? `<i class="${icon}"></i>` : ""} ${pkg[f]}</li>`;
+                const fieldTxt = (f === nameof<IDataPackage>(p => p.inputs))
+                    ? `<pre>${JSON.stringify(pkg[f], null, 4)}</pre>`
+                    : `${pkg[f]}`;
+                listContent += `<li class="list-group-item">${f}: ${icon ? `<i class="${icon}"></i>` : ""} ${fieldTxt}${opDesc ? `, ${opDesc}` : ""}</li>`;
             }
         }
     }
     let footer = "";
-    if (hasOpertaion) {
-        dataOperations.forEach(o => {
-            footer += `<span class="badge badge-light"><i class="${o.iconCss}"></i>&nbsp${DataOperationCategory[o.category]}</span>`;
-        });
-        footer = `<div class="card-footer text-muted">${footer}</div>`;
-    }
+    //if (hasOpertaion) {
+    //    dataOperations.forEach(o => {
+    //        footer += `<span class="badge badge-light">${DataOperationCategory[o.category]}: ${o.description}</span>`;
+    //    });
+    //    footer = `<div class="card-footer text-muted">${footer}</div>`;
+    //}
     const html = `<div class="card bg-light"><div class="card-body"><h5 class="card-title">Package Information</h5></div><ul class="list-group list-group-flush">${listContent}</ul>${footer}</div>`;
     return html;
 }
@@ -78,6 +83,7 @@ class DrawConfig {
 
     get nodeInputPieCssClass() { return "input-pie"; }
     get plusTxtCssClass() { return "expand-plus"; }
+    get expandedCssClass() { return "expanded-node"; }
     get plusExpandedCssClass() { return "expanded"; }
 
     get linkCssClass() { return "link"; }

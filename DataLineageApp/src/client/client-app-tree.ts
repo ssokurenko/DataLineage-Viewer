@@ -4,6 +4,7 @@ import { drawConfig, packageDescriptionHtml } from "./d3-package-extensions";
 
 import { IDataPackage } from "../server/data-package";
 import { PacakgesCollection } from "./packages-collection";
+import dataOperations, { DataOperationCategory, DataOperation } from "./process-operation";
 
 interface IPackageTreeData {
     name: string;
@@ -125,7 +126,7 @@ class App {
                 return "M" + d.x + "," + d.y
                 + "C" + d.x + "," + (d.y + py) / 2
                 + " " + px + "," + (d.y + py) / 2
-                    + " " + px + "," + py
+                    + " " + px + "," + py;
             });
 
         // adds each node as a group, node is g collection
@@ -138,7 +139,7 @@ class App {
             
 
         // adds the circle to the node
-        node.append("circle")
+        const circle = node.append("circle")
             .attr("class", "package")
             .attr("fill", d => this._packages.pacakgeColor(d.data.data.mamAddress) as string);
 
@@ -147,17 +148,20 @@ class App {
             const n = nodes[index];
             const pkg = d.data.data;
             //only when the pkg has the inputs and at least one input doesn't in the this._packages, then we will show "+", otherwise all its inputs are exist and will be drawn, so we needn't show "+"
-            const text =
-                (pkg.inputs &&
-                        pkg.inputs.length > 0 &&
-                        pkg.inputs.filter(ia => !this._packages.packageExist(ia, true)).length > 0)
-                    ? "+"
-                    : "";
+            const canExpand = pkg.inputs &&
+                pkg.inputs.length > 0 &&
+                pkg.inputs.filter(ia => !this._packages.packageExist(ia, true)).length > 0;
+            const operation = DataOperation.findOperation(pkg.operation);
+            const text = operation ? operation.iocnFontText : (canExpand ? "\uf067" : "");
             const txtElement = d3.select(n).append("text")
-                .text(text).attr("class", drawConfig.plusTxtCssClass);
+                .text(text as string)
+                .attr("font-family", "Font Awesome 5 Free")
+            //always add fas, as the plus text is also an font awsome
+                .attr("class", `fas ${drawConfig.plusTxtCssClass} ${canExpand ? "" : `${drawConfig.expandedCssClass}`} ${operation ? operation.iconCss : ""}`);
+           
             //.attr("fill", color); css will do
-            const rect: SVGRect = (txtElement.node() as any).getBBox();
-            txtElement.attr("dy", (rect.height / 2) - 12).attr("dx", -(rect.width / 2));
+            const rect: SVGRect = (circle.node() as any).getBBox();
+            txtElement.attr("dy", (rect.height / 2) - 5).attr("dx", -(rect.width / 2) + 4);
         });
 
         // adds the text to the node
@@ -217,7 +221,7 @@ class App {
     private static restWndHeight(): number {
         //calculate the left space without the heard block, so we will make the svg take the whole height of the left space in the windows
         //please note, after the d3 simulation finished, an event will be triggered and we will resize the svg to have the size just show all the nodes (maybe smaller then the initial size or larger)
-        return ($(window).height() as number) - ($("#headerDiv").height() as number) - 50;
+        return ($(window).height() as number) - ($("#headerDiv").height() as number) - ($("#operationsExampleDiv").height() as number) - 50;
     }
 
     private prepareSize(): { width: number; height: number; treeWidth:number; treeHeight:number; marginLeft:number; marginTop: number } {
@@ -240,6 +244,7 @@ let app: App = new App(`#${mainGraphSvgId}`);
 $("#searchBtn").on("click",
     () => {
         app.reset();
+        $("#operationsExampleDiv").show();
         //get address from search input or placehoder
         let address = $("#inputAddress").val() as string;
         if (!address) {
@@ -277,6 +282,11 @@ function getParameterByName(name: string) {
 }
 
 $(document as any).ready(() => {
+    let desc = "";
+    dataOperations.forEach(o => {
+        desc += `<span class="badge badge-light"><i class="${o.iconCss}"></i>${DataOperationCategory[o.category]}</span>`;
+    });
+    $("#operationsExampleDiv > div").append($(desc));
     const address = getParameterByName("address");
     const expandAll = getParameterByName("expandAll");
     if (expandAll == "true"||typeof (expandAll) === undefined||expandAll === ""||expandAll === null) {
@@ -286,6 +296,7 @@ $(document as any).ready(() => {
     }
     if (address) {
         $("#inputAddress").val(address);
+        $("#operationsExampleDiv").show();
         app.reset();
         app.update(address, expandAll !== "false");
     }
