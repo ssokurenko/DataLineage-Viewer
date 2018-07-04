@@ -124,10 +124,10 @@ export class Publisher extends React.Component<IProp, State> {
         };
         this.state.otherFields.forEach(f => newPkg[f.key] = f.value);
         if (this.state.ownerMetadata) {
-            newPkg["ownerMetadata"] = this.state.ownerMetadata;
+            newPkg[nameof<IDataPackage>(p => p.ownerMetadata)] = this.state.ownerMetadata;
         }
         if (this.state.operation && this.notEmptyInputAddresses().length > 0) {
-            newPkg["operation"] = this.state.operation;
+            newPkg[nameof<IDataPackage>(p => p.operation)] = this.state.operation;
         }
         try {
             const pkg = await $.ajax(`/api/simulate/${this.state.packageType}/${this.state.seed}`,

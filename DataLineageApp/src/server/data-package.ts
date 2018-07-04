@@ -17,6 +17,7 @@
      */
     inputs: string[];
     operation?: string;
+    ownerMetadata?: any;
 }
 
 export interface ILightweightPackage extends IDataPackage {

@@ -25,16 +25,19 @@ const mainGraphSvgId = "mainGraphSvg";
 const pkgInfoContainerDivId = "pkgInfoContainerDiv";
 
 class App {
-    private readonly _svg: d3.Selection<HTMLElement, any, any, any>;
+    private _svg: d3.Selection<HTMLElement, any, any, any>;
     private _treemap: d3.TreeLayout<IPackageTreeData>;
     private _nodesData: d3.HierarchyNode<IPackageTreeData>|undefined;
     private readonly _packages: PacakgesCollection<IDataPackage>;
     private _rootPkgAddress: string;
 
-    constructor(private readonly svgSelector: string) {
-        this._svg = d3.select(svgSelector);
+    constructor(private readonly _svgId: string) {
         this._packages = new PacakgesCollection(drawConfig.colorSeries);
         this.reset();
+    }
+
+    private get svgSelector() {
+        return `#${this._svgId}`;
     }
 
     private async fetchPackage(address: string, all: boolean = false): Promise<IDataPackage[]> {
@@ -161,7 +164,12 @@ class App {
            
             //.attr("fill", color); css will do
             const rect: SVGRect = (circle.node() as any).getBBox();
-            txtElement.attr("dy", (rect.height / 2) - 5).attr("dx", -(rect.width / 2) + 4);
+            txtElement.attr("dy", (rect.height / 2) * 0.6).attr("dx", -(rect.width / 2) * 0.65);
+
+            d3.select(n).append("text")
+                .attr("dx", drawConfig.nodeRadius * 1.5)
+                .attr("dy", drawConfig.nodeRadius * 0.5)
+                .text(`Owner: ${pkg.ownerMetadata ? pkg.ownerMetadata :"Unkown"}`);
         });
 
         // adds the text to the node
@@ -176,11 +184,15 @@ class App {
      * 
      * @param address
      * @param expandAll
+     * This method will clear all data and useing address to get all data to draw, unlike updateByData which will only add or update data and draw
      */
     async update(address: string, expandAll?: boolean): Promise<void> {
         this._rootPkgAddress = address;
         //The package node already exist, need do nothing
         if (this._packages.packageExist(address)) return;
+        this._packages.clear();
+        this.close();
+        this.reset();
         //we only update when this is a root package or a pakcage is referenced as input, for the package has nothing to do with us, we ignore it
         if (address === this._rootPkgAddress || this._packages.getInputTo(address).length > 0) {
             const pkg = await this.fetchPackage(address, expandAll);
@@ -193,7 +205,9 @@ class App {
     }
 
     reset(): void {
-        this.close();
+        if (!this._svg) {
+            this._svg = d3.select(this.svgSelector);
+        }
         const size = this.prepareSize();
         const $svg = $(this.svgSelector);
         this._treemap = d3.tree<IPackageTreeData>().size([size.treeWidth, size.treeHeight]);
@@ -215,7 +229,10 @@ class App {
 
     close(): void {
         //clear all
-        this._svg.selectAll("*").remove();
+        const parent = $(this.svgSelector).parent();
+        $(this.svgSelector).remove();
+        parent.append(`<svg width="100%" id="${this._svgId}">`);
+        this._svg = undefined as any;
     }
 
     private static restWndHeight(): number {
@@ -240,10 +257,9 @@ class App {
     }
 }
 
-let app: App = new App(`#${mainGraphSvgId}`);
+let app: App = new App(mainGraphSvgId);
 $("#searchBtn").on("click",
     () => {
-        app.reset();
         $("#operationsExampleDiv").show();
         //get address from search input or placehoder
         let address = $("#inputAddress").val() as string;
@@ -264,6 +280,7 @@ $("#searchBtn").on("click",
 $(window).on("resize",
     () => {
         if (app) {
+            app.close();
             app.reset();
         }
     });
