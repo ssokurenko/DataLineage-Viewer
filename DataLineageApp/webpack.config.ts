@@ -105,7 +105,7 @@ const configServer:webpack.Configuration = {
         __dirname: false
     },
     externals: nodeModules,
-    devtool: "source-map"
+    devtool: "cheap-module-eval-source-map"
 };
 
 export default [config, configServer];

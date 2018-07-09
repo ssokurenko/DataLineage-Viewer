@@ -18,6 +18,10 @@ export default class IOTAReader {
         //ToDo: if fetchSingle get exception, what will happen
         return Mam.fetchSingle(address, "public", null)
             .then((mamResult: { payload: string, nextRoot: string }) => {
+                if (!mamResult) {
+                    console.error(`Package of address '${address}' returned undefined result from provider ${this._iotaProvider}`);
+                    return null;
+                }
                 console.log(`Package of address '${address}' is fetached from provider ${this._iotaProvider}`);
                 return {
                     json: iota.utils.fromTrytes(mamResult.payload),
