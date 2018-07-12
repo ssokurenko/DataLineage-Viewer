@@ -75,7 +75,7 @@ class App extends React.Component<any, IState> {
                            <input type="text" value={this.state.customTestAddress} onChange={this.onInputChanged.bind(this, false)} className="form-control" placeholder="CBVXWVGB9EJQYRRXNNTYEIGFVRFCLP9UUNCCGOARE9EJZXDFD9FDQZCQJNBCAMPRUESQSGYCMRJNOEWMV"/>
                        </div>
                    </div>
-                   <button type="button" className="btn btn-primary"><i className="fas fa-signal" onClick={this.onTestBtnClick.bind(this)}></i>&nbsp;Test</button>
+                   <button type="button" className="btn btn-primary" onClick={this.onTestBtnClick.bind(this)}><i className="fas fa-signal"></i>&nbsp;Test</button>
                </div>;
     }
 }
