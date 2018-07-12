@@ -18,12 +18,14 @@ class App extends React.Component<any, IState> {
     }
 
     async onTestBtnClick() {
+        console.log("Checking urls...");
         const urlsStr: string = this.state.urlsStr;
         if (!urlsStr) {
             return;
         }
         const urls = urlsStr.split(",").map(u => u.trim()).filter(u => u);
         try {
+            console.log("Submitting testing request");
             const result = await $.ajax(`/api/performance/test${this.state.useCustomTestAddress?`/${this.state.customTestAddress}`:""}`,
                 {
                     method: "POST",
