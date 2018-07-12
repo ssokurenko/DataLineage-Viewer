@@ -63,6 +63,7 @@
       <SubType>Code</SubType>
     </Content>
     <Content Include="src\server\views\error.pug" />
+    <Content Include="src\server\views\performance.pug" />
     <Content Include="src\server\views\index.pug" />
     <Content Include="src\server\views\layout.pug" />
     <Content Include="src\server\views\simulate-processor.pug" />
@@ -77,6 +78,7 @@
   <ItemGroup>
     <Folder Include="src\" />
     <Folder Include="src\client\" />
+    <Folder Include="src\client\performance\" />
     <Folder Include="src\client\simulate\" />
     <Folder Include="src\cmds\" />
     <Folder Include="src\common\" />
@@ -99,6 +101,7 @@
     <TypeScriptCompile Include="src\client\d3-package-extensions.ts" />
     <TypeScriptCompile Include="src\client\d3.extensions.d.ts" />
     <TypeScriptCompile Include="src\client\packages-collection.ts" />
+    <TypeScriptCompile Include="src\client\performance\performance-app.tsx" />
     <TypeScriptCompile Include="src\client\process-operation.ts" />
     <TypeScriptCompile Include="src\client\simulate\channel-packages-list.tsx">
       <SubType>Code</SubType>
@@ -130,6 +133,7 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="src\server\routes\address.ts" />
+    <TypeScriptCompile Include="src\server\routes\performance-test.ts" />
     <TypeScriptCompile Include="src\server\routes\simulate.ts" />
     <TypeScriptCompile Include="src\server\server-app.ts" />
     <TypeScriptCompile Include="src\server\server-config.ts">

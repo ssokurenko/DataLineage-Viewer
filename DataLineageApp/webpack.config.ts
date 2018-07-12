@@ -9,7 +9,8 @@ const config: webpack.Configuration = {
         "client-app": "./src/client/client-app.ts",
         "client-app-tree": "./src/client/client-app-tree.ts",
         "simulate-publisher": "./src/client/simulate/publisher-app.tsx",
-        "simulate-processor": "./src/client/simulate/processor-app.tsx"
+        "simulate-processor": "./src/client/simulate/processor-app.tsx",
+        "performance": "./src/client/performance/performance-app.tsx"
     },
     output: {
         path: path.resolve(__dirname, "./dist/public/javascripts/"),
@@ -65,7 +66,7 @@ const config: webpack.Configuration = {
         d3: "d3"/*,
         toastr: "toastr"*/
     },
-    devtool: "source-map"
+    devtool: "cheap-module-source-map"
 };
 
 const nodeModules: any = {};
@@ -105,7 +106,16 @@ const configServer:webpack.Configuration = {
         __dirname: false
     },
     externals: nodeModules,
-    devtool: "cheap-module-eval-source-map"
+    devtool: "source-map"
 };
-
-export default [config, configServer];
+export default (env, options) => {
+    if (options.mode === "development") {
+        console.log(`options.mode is development, change the devtool of client config to cheap-module-eval-source-map`);
+        config.devtool = "cheap-module-eval-source-map";
+        console.log(`options.mode is development, change the devtool of server config to eval-source-map`);
+        configServer.devtool = "eval-source-map";
+    }
+    console.log(`client config.devtool is ${config.devtool}`);
+    console.log(`server config.devtool is ${configServer.devtool}`);
+    return [config, configServer];
+};

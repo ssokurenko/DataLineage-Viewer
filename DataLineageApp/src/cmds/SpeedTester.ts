@@ -5,8 +5,9 @@ export interface ITestResult {
     totalSeconds: number;
 }
 
+const defaultTestAddress = "CBVXWVGB9EJQYRRXNNTYEIGFVRFCLP9UUNCCGOARE9EJZXDFD9FDQZCQJNBCAMPRUESQSGYCMRJNOEWMV";
 export default class SpeedTester {
-    static async test(iotaProviders: string[], onOneTested?:(result: ITestResult)=>void): Promise<ITestResult[]> {
+    static async test(iotaProviders: string[], onOneTested?: (result: ITestResult) => void, testAddress?: string): Promise<ITestResult[]> {
         const result: ITestResult[] = [];
         for (let i = 0; i < iotaProviders.length; i++) {
             const p = iotaProviders[i];
@@ -15,7 +16,7 @@ export default class SpeedTester {
             const startTime = Date.now();
             const oneTestResult: ITestResult = { provider: p, totalSeconds: -1 };
             try {
-                const pkg = await reader.fetchPacakgeInfo("", false);
+                const pkg = await reader.fetchPacakgeInfo(testAddress ? testAddress : defaultTestAddress, false);
                 const endtime = Date.now();
                 if (pkg) {
                     oneTestResult.totalSeconds = (endtime.valueOf() - startTime.valueOf()) / 1000;
