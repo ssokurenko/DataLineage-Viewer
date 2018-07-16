@@ -38,7 +38,6 @@
     "del-cli": "^1.1.0",
     "nodemon": "^1.18.2",
     "npm-run-all": "^4.1.3",
-    "socket.io": "^2.1.1",
     "ts-loader": "^4.4.2",
     "ts-nameof": "^1.0.0",
     "ts-nameof-loader": "^1.0.1",
@@ -64,7 +63,8 @@
     "react-dom": "^16.4.1",
     "readline": "^1.3.0",
     "serve-favicon": "^2.3.0",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "socket.io": "^2.1.1"
   },
   "nodemonConfig": {
     "verbose": true,
