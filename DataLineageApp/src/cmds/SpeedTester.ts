@@ -1,9 +1,6 @@
 ﻿import IOTAReader from "./IOTAReader";
+import { ITestResult } from "../common/socket-io-messages";
 
-export interface ITestResult {
-    provider: string;
-    totalSeconds: number;
-}
 
 const defaultTestAddress = "CBVXWVGB9EJQYRRXNNTYEIGFVRFCLP9UUNCCGOARE9EJZXDFD9FDQZCQJNBCAMPRUESQSGYCMRJNOEWMV";
 export default class SpeedTester {

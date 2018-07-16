@@ -56,6 +56,7 @@
     <Content Include="src\server\public\stylesheets\bootstrap\bootstrap.min.css.map" />
     <Content Include="src\server\public\stylesheets\fontawesome\fontawesome-all.min.css" />
     <Content Include="src\server\public\stylesheets\main.css" />
+    <Content Include="src\server\socket.io-server.ts" />
     <Content Include="src\server\tsconfig.json">
       <SubType>Code</SubType>
     </Content>
@@ -125,6 +126,7 @@
     <TypeScriptCompile Include="src\cmds\mam-cmd.ts" />
     <TypeScriptCompile Include="src\cmds\simulate.ts" />
     <TypeScriptCompile Include="src\cmds\SpeedTester.ts" />
+    <TypeScriptCompile Include="src\common\socket-io-messages.ts" />
     <TypeScriptCompile Include="src\common\utilities.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>

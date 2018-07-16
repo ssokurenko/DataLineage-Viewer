@@ -1,9 +1,10 @@
 ﻿import * as express from "express";
 import config from "../server-config";
 import SpeedTester from "../../cmds/SpeedTester";
+import io from "../socket.io-server";
 
-export const router = express.Router();
-export const routerApi = express.Router();
+const router = express.Router();
+const routerApi = express.Router();
 
 router
     .get("/", async (req, res) => {
@@ -11,20 +12,27 @@ router
     });
 
 routerApi
-    .post("/test/:testAddress?",async (req, res) => {
-        try {
-            const body = req.body;
-            if (!body || !body.urls) {
-                res.end(400);
-                return;
+    .post("/test/:testAddress?",
+        async (req, res) => {
+            try {
+                const body = req.body;
+                if (!body || !body.urls) {
+                    res.end(400);
+                    return;
+                }
+                const clientId = body.socketClientId;
+                io.server.sendMessage(clientId, "PerformanceTest", { message: "Starting performance testing on server" });
+                const result = await SpeedTester.test(body.urls,
+                    oneTest => {
+                        io.server.sendMessage(clientId, "PerformanceTest", { message: "One iota provider test is finished.", testResult: oneTest });
+                    },
+                    req.params["testAddress"]);
+                res.json(result);
+            } catch (e) {
+                console.error(`Server errro for performance test, exception is ${e}`);
+                res.end(500);
             }
-            await SpeedTester.test(body.urls,
-                oneTest => {
-                    res.json(oneTest);
-                },
-                req.params["testAddress"]);
-        } catch (e) {
-            res.end(500);
-        }
-    });
+        });
 
+const init = { router, routerApi };
+export default init;
