@@ -191,7 +191,8 @@ export default class Simulate {
             delete copied.isSubmitted;
         }
         delete copied.mamAddress;
-        return await this._iotaWriter.attachNew(copied);
+        const result = await this._iotaWriter.attachNew(copied);
+        return result ? result.address : undefined;
     }
 
     /**
