@@ -9,7 +9,17 @@ interface IState {
     useCustomTestAddress: boolean;
     customTestAddress: string;
     testResults: IPerformanceTestMessage[];
+    newIotaProviders: string;
+    password?: string;
     isTesting: boolean;
+    isSubmitting: boolean;
+}
+
+enum InputFor {
+    Urls,
+    TestAddress,
+    NewProviders,
+    Password
 }
 
 class App extends React.Component<any, IState> {
@@ -22,7 +32,9 @@ class App extends React.Component<any, IState> {
             useCustomTestAddress: false,
             customTestAddress: "",
             testResults: [],
-            isTesting: false
+            newIotaProviders: "",
+            isTesting: false,
+            isSubmitting: false
         };
         this._socket = io.connect();
         this._socket.on("PerformanceTest", this.onPerformanceTest.bind(this));
@@ -61,11 +73,47 @@ class App extends React.Component<any, IState> {
         this.setState({isTesting: false});
     }
 
-    onInputChanged(isUrl:boolean, e: React.ChangeEvent<HTMLInputElement>) {
-        if (isUrl) {
-            this.setState({ urlsStr: e.target.value });
-        } else {
-            this.setState({ customTestAddress: e.target.value });
+    async onSubmitBtnClick() {
+        if (this.state.isSubmitting || !this.state.password||!this.state.newIotaProviders) return;
+        const providers = this.state.newIotaProviders.split(",").map(p => p.trim()).filter(p => p);
+        if (providers.length <= 0) {
+            return;
+        }
+        this.setState({ isSubmitting: true });
+        try {
+            const result = await $.ajax("/api/performance/config/iotaProviders",
+                {
+                    method: "POST",
+                    data: JSON.stringify({ iota: providers, password: this.state.password }),
+                    contentType: "application/json",
+                    dataType: "json"
+                });
+            if (result) {
+                alert(`Server iota config is changed to ${JSON.stringify(result)}`);
+            }
+        } catch (e) {
+            alert(`failed to change server iota config with error ${e}`);
+            console.error(e);
+        }
+        this.setState({ isSubmitting: false });
+    }
+
+    onInputChanged(forField: InputFor, e: React.ChangeEvent<HTMLInputElement>) {
+        switch (forField) {
+            case InputFor.Urls:
+                this.setState({ urlsStr: e.target.value });
+                return;
+            case InputFor.TestAddress:
+                this.setState({ customTestAddress: e.target.value });
+                return;
+            case InputFor.NewProviders:
+                this.setState({ newIotaProviders: e.target.value });
+                return;
+            case InputFor.Password:
+                this.setState({ password: e.target.value });
+                return;
+            
+        default:
         }
     }
 
@@ -81,7 +129,7 @@ class App extends React.Component<any, IState> {
                            <div className="input-group-prepend">
                                <div className="input-group-text"><i className="fas fa-link"></i></div>
                            </div>
-                           <input value={this.state.urlsStr} onChange={this.onInputChanged.bind(this, true)} type="text" className="form-control" placeholder="Input the url start with http(s) and seperated by ,"/>
+                           <input value={this.state.urlsStr} onChange={this.onInputChanged.bind(this, InputFor.Urls)} type="text" className="form-control" placeholder="Input the url start with http(s) and seperated by ,"/>
                        </div>
                    </div>
                    <div className="form-group">
@@ -92,7 +140,7 @@ class App extends React.Component<any, IState> {
                            <div className="input-group-prepend">
                                <div className="input-group-text"><i className="fas fa-map-marker-alt"></i></div>
                            </div>
-                           <input type="text" value={this.state.customTestAddress} onChange={this.onInputChanged.bind(this, false)} className="form-control" placeholder="CBVXWVGB9EJQYRRXNNTYEIGFVRFCLP9UUNCCGOARE9EJZXDFD9FDQZCQJNBCAMPRUESQSGYCMRJNOEWMV"/>
+                           <input type="text" value={this.state.customTestAddress} onChange={this.onInputChanged.bind(this, InputFor.TestAddress)} className="form-control" placeholder="CBVXWVGB9EJQYRRXNNTYEIGFVRFCLP9UUNCCGOARE9EJZXDFD9FDQZCQJNBCAMPRUESQSGYCMRJNOEWMV"/>
                        </div>
                    </div>
                    <div>
@@ -100,9 +148,32 @@ class App extends React.Component<any, IState> {
                            <i className={`fas ${this.state.isTesting ? "fa-sync-alt fa-spin" : "fa-signal"}`}></i>&nbsp;Test
                        </button>
                    </div>
+                   <div className="form-group">
+                       <label>Change IOTA providers to</label>
+                       <div className="input-group">
+                           <div className="input-group-prepend">
+                               <div className="input-group-text"><i className="fas fa-link"></i></div>
+                           </div>
+                           <input value={this.state.newIotaProviders} onChange={this.onInputChanged.bind(this, InputFor.NewProviders)} type="text" className="form-control" placeholder="Input the new url for providersstart with http(s) and seperated by ,"/>
+                       </div>
+                   </div>
+                   <div className="form-group">
+                       <label>Password</label>
+                       <div className="input-group">
+                           <div className="input-group-prepend">
+                               <div className="input-group-text"><i className="fas fas-key"></i></div>
+                           </div>
+                           <input value={this.state.password} onChange={this.onInputChanged.bind(this, InputFor.Password)} type="password" className="form-control" />
+                       </div>
+                   </div>
+                   <div>
+                       <button type="button" disabled={this.state.isSubmitting} className="btn btn-primary" onClick={this.onSubmitBtnClick.bind(this)}>
+                           <i className={`fas ${this.state.isSubmitting ? "fa-sync-alt fa-spin" : "fa-exchange-alt"}`}></i>&nbsp;Change Config
+                       </button>
+                   </div>
                    <div className="row">
                        <div className="col-sm-12">
-                           <LogOutput log={this.state.testResults.map(r=>`${r.message}${r.testResult?`${JSON.stringify(r.testResult, null, 4)}`:""}`)}/>
+                           <LogOutput log={this.state.testResults.map(r => `${r.message}${r.testResult ? `${JSON.stringify(r.testResult, null, 4)}` : ""}`)} />
                        </div>
                    </div>
                </div>;

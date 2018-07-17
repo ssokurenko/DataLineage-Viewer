@@ -32,7 +32,16 @@ routerApi
                 console.error(`Server errro for performance test, exception is ${e}`);
                 res.end(500);
             }
-        });
+    })
+    .post("/config/iotaProviders", (req, res) => {
+        const body = req.body;
+        if (!body || body.password !== "dnvgliota" || !Array.isArray(body.iota)) {
+            res.end(404);
+            return;
+        }
+        config.iotaProviders = body.iota;
+        res.json(config.iotaProviders);
+    });
 
 const init = { router, routerApi };
 export default init;
