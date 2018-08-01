@@ -1,6 +1,6 @@
 ﻿import * as express from "express";
 import config from "../server-config";
-import SpeedTester from "../../cmds/SpeedTester";
+import SpeedTester from "../../../../IOTA-Performance-Test/dist/speed-tester";
 import io from "../socket.io-server";
 
 const router = express.Router();

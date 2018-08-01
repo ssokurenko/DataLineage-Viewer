@@ -1,7 +1,7 @@
 ﻿import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as io from "socket.io-client";
-import { IPerformanceTestMessage, ITestResult } from "../../common/socket-io-messages";
+import { IPerformanceTestMessage, ITestResult } from "../../../../IOTA-Performance-Test/dist/speed-tester";
 import { LogOutput } from "../simulate/log-output";
 
 interface IState {
